@@ -1,0 +1,77 @@
+.sidebar {
+  width: 240px;
+  height: 703px;
+  background-color: #111827;
+  color: white;
+  margin: 0%;
+  padding-top: 3%;
+  display: block;
+  padding-right: 2.5rem;
+  float: left;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+}
+.logo_icon {
+  color: #ffffff;
+  background-color: #4361ee;
+  position: relative;
+  bottom: 30px;
+  width: 17%;
+  display: flex;
+  height: 5%;
+  text-align: center;
+  border-radius: 10px;
+  margin-left: 10%;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-family: "Poppins", "Segoe UI", sans-serif;
+}
+.logo_text {
+  height: 1rem;
+  margin-left: 0.4rem;
+  margin-top: 0rem;
+  font-size: 1.2rem;
+  position: relative;
+  bottom: 63px;
+  left: 55px;
+}
+.sidebar_menu {
+  margin-top: 40px;
+}
+.sidebar_menu li {
+  list-style-type: none;
+}
+.sidebar_menu li a {
+  text-decoration: none;
+  color: white;
+}
+ul {
+  padding: 0px;
+}
+.list_item {
+  width: 220px;
+  height: 45px;
+  margin-left: 1rem;
+  text-align: left;
+  align-items: center;
+  padding-left: 15px;
+  display: flex;
+  margin-bottom: 1.3rem;
+}
+.list_item:hover {
+  background-color: #4361ee;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.list_item span {
+  font-size: 1rem;
+}
+.crights {
+  position: absolute;
+  bottom: 1rem;
+  left: 1.5rem;
+  flex-grow: 1;
+}
