@@ -186,7 +186,7 @@ function Ogrenci() {
 
   return (
     <>
-      {isSidebarOpen && <Sidebar />}
+      {isSidebarOpen && <Sidebar userType="ogrenci" />}
       <div className="content">
         <Header toggleSidebar={toggleSidebar} />
 

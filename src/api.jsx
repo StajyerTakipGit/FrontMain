@@ -93,3 +93,88 @@ export const DefteriYukle = (staj, gunler, toast) => {
     );
   });
 };
+
+
+// src/mockApi.js (veya src/api.js içinde)
+
+// Başlangıç için sahte stajyer verisi
+let mockStajyerler = [
+  {
+    id: 1,
+    ogrenci_adi: "Ayşe Yılmaz",
+    okul_adi: "İstanbul Teknik Üniversitesi",
+    konu: "Yazılım Geliştirme",
+    baslangic_tarihi: "2024-07-15",
+    bitis_tarihi: "2024-09-15",
+    durum: "Beklemede", // 'Beklemede', 'Onaylandı', 'Reddedildi'
+  },
+  {
+    id: 2,
+    ogrenci_adi: "Mehmet Öztürk",
+    okul_adi: "Orta Doğu Teknik Üniversitesi",
+    konu: "Veri Analizi",
+    baslangic_tarihi: "2024-08-01",
+    bitis_tarihi: "2024-09-30",
+    durum: "Onaylandı",
+  },
+  {
+    id: 3,
+    ogrenci_adi: "Fatma Demir",
+    okul_adi: "Boğaziçi Üniversitesi",
+    konu: "Pazarlama",
+    baslangic_tarihi: "2024-07-20",
+    bitis_tarihi: "2024-08-20",
+    durum: "Reddedildi",
+  },
+    {
+    id: 4,
+    ogrenci_adi: "Ali Vural",
+    okul_adi: "Yıldız Teknik Üniversitesi",
+    konu: "Web Tasarım",
+    baslangic_tarihi: "2024-09-01",
+    bitis_tarihi: "2024-11-01",
+    durum: "Beklemede",
+  },
+];
+
+// Sahte ağ gecikmesi simülasyonu için yardımcı fonksiyon
+const simulateNetworkDelay = (delay = 500) =>
+  new Promise(resolve => setTimeout(resolve, delay));
+
+export const getKurumStajyerleri = async () => {
+  console.log("Mock API: getKurumStajyerleri çağrıldı.");
+  await simulateNetworkDelay(); // Ağ gecikmesini simüle et
+  
+  return [...mockStajyerler]; 
+};
+
+
+export const onaylaStaj = async (stajId) => {
+  console.log(`Mock API: onaylaStaj çağrıldı (ID: ${stajId}).`);
+  await simulateNetworkDelay();
+  const stajIndex = mockStajyerler.findIndex(staj => staj.id === stajId);
+  if (stajIndex !== -1) {
+    mockStajyerler[stajIndex].durum = "Onaylandı";
+    console.log("Mock Data Güncellendi:", mockStajyerler[stajIndex]);
+    return { success: true, message: "Staj başarıyla onaylandı." };
+  } else {
+    // Gerçek API'de 404 Not Found gibi bir hata dönebilir.
+    console.error(`Mock API Hata: Staj bulunamadı (ID: ${stajId})`);
+    throw new Error("Staj bulunamadı."); // Hata fırlat
+  }
+};
+
+export const reddetStaj = async (stajId) => {
+  console.log(`Mock API: reddetStaj çağrıldı (ID: ${stajId}).`);
+  await simulateNetworkDelay();
+  const stajIndex = mockStajyerler.findIndex(staj => staj.id === stajId);
+  if (stajIndex !== -1) {
+    mockStajyerler[stajIndex].durum = "Reddedildi";
+    console.log("Mock Data Güncellendi:", mockStajyerler[stajIndex]);
+    return { success: true, message: "Staj başarıyla reddedildi." };
+  } else {
+    console.error(`Mock API Hata: Staj bulunamadı (ID: ${stajId})`);
+    throw new Error("Staj bulunamadı.");
+  }
+};
+

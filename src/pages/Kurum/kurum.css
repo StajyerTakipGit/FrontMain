@@ -1,0 +1,95 @@
+/* Genel Sayfa Yapısı (app.css'den benzer) */
+.kurum-content {
+    background: linear-gradient(135deg, #e2e8f0, #f7fafc); /* Daha açık tema */
+    display: flex;
+    padding: 0px 0px;
+    flex-direction: column;
+    min-height: 100vh; /* Tüm ekranı kaplaması için */
+    width: auto; /* Sidebar ile uyumlu */
+    transition: margin-left 0.3s ease; /* Sidebar açılıp kapanma animasyonu için */
+  }
+  
+  /* Sidebar açıkken içeriği sağa ittir (Sidebar genişliğine göre ayarla) */
+  /* .kurum-content-shifted {
+    margin-left: 250px;
+  } */
+  
+  /* Kart Alanı Stilleri */
+  .kurum-rows {
+    margin-top: 20px; /* Header ile boşluk */
+    width: 100%;
+    padding-left: 30px; /* Daha az padding */
+    padding-right: 30px;
+    margin-bottom: 30px;
+  }
+  
+  .kurum-rows-border {
+    border: 1px solid #cbd5e0; /* Hafif border */
+    border-radius: 12px;
+    height: auto; /* İçeriğe göre ayarla */
+    padding: 10px 20px; /* İç boşluk */
+    background-color: white; /* Kartların arkası beyaz */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  /* Kart Stilleri */
+  .kurum-box {
+    background: linear-gradient(135deg, #fdfdfe, #edf2f7); /* Çok hafif gradient */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .kurum-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  }
+  
+  /* Tablo Stilleri */
+  .kurum-staj-tablosu {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    border-radius: 8px; /* Tabloya da border-radius */
+    overflow: hidden; /* İçerik taşmasını engelle */
+  }
+  
+  .kurum-staj-tablosu thead {
+    background-color: #f7fafc; /* Açık gri başlık */
+    color: #4a5568; /* Koyu gri yazı */
+    text-align: left;
+    border-bottom: 2px solid #e2e8f0; /* Başlık altı çizgi */
+  }
+  .kurum-staj-tablosu thead th {
+    padding: 12px 15px;
+    font-weight: 600; /* Kalın başlık */
+    text-transform: uppercase; /* Büyük harf */
+    font-size: 13px; /* Biraz daha küçük başlık */
+    color: #4a5568; /* Th color inheritance */
+  }
+  
+  .kurum-staj-tablosu td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0; /* Satır çizgisi */
+    font-size: 14px;
+    color: #2d3748; /* Ana metin rengi */
+  }
+  
+  .kurum-staj-tablosu tbody tr:last-child td {
+    border-bottom: none; /* Son satırın alt çizgisini kaldır */
+  }
+  
+  /* Responsive Ayarlamalar (Öğrenci CSS'inden alınabilir) */
+  @media (max-width: 768px) {
+    .kurum-rows {
+      padding-left: 15px;
+      padding-right: 15px;
+    }
+     .kurum-content {
+       /* Sidebar kapalıyken veya mobil görünümde */
+       margin-left: 0;
+     }
+  }
+  
+  /* Header vb. diğer genel stiller app.css veya ilgili component CSS'inden gelebilir */
+  
