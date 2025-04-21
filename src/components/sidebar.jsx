@@ -8,11 +8,16 @@ import {
   faUser,
   faBriefcase,
 } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 function Sidebar() {
+  const navigate = useNavigate();
   return (
     <div className={styles.sidebar}>
-      <div className={styles.logo_icon}>IFS</div>
-      <div className={styles.logo_text}>Stajyer Takip Sistemi</div>
+      <div className={styles.logo}>
+        <div className={styles.logo_icon}>IFS</div>
+        <div className={styles.logo_text}>Stajyer Takip Sistemi</div>
+      </div>
+
       <div className={styles.sidebar_menu}>
         <ul>
           <li className={styles.list_item}>
@@ -47,15 +52,6 @@ function Sidebar() {
                 <FontAwesomeIcon icon={faClipboardCheck} size="xl" />
               </span>
               <span style={{ marginLeft: "15px" }}>Puantaj Çizelgesi</span>
-            </a>
-          </li>
-          <li className={styles.list_item} style={{ paddingLeft: "17px" }}>
-            <a href="/ogrenci">
-              <span>
-                <FontAwesomeIcon icon={faUser} size="xl" />
-              </span>
-
-              <span style={{ marginLeft: "15px" }}>Profilim</span>
             </a>
           </li>
         </ul>

@@ -12,10 +12,15 @@ function Login() {
     mutationFn: fetchlogin,
     onSuccess: (data) => {
       console.log("Login başarılı", data);
-
+      localStorage.setItem("token", data.access);
+      localStorage.setItem("user", JSON.stringify(data));
       navigate("/ogrenci");
     },
     onError: (error) => {
+      if (error.response && error.response.status === 401) {
+        alert("Kullanıcı adı veya şifre yanlış.");
+      }
+
       console.error("Login hatası:", error);
     },
   });
@@ -45,10 +50,16 @@ function Login() {
             const errors = {};
             if (!values.email) {
               errors.email = "Kullanıcı adı gerekli";
+            } else if (
+              !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
+            ) {
+              errors.email = "Geçerli bir email adresi giriniz";
             }
+
             if (!values.password) {
               errors.password = "Şifre gerekli";
             }
+
             return errors;
           }}
           onSubmit={(values) => {
@@ -74,7 +85,7 @@ function Login() {
               Şifre
             </label>
             <Field
-              type="password"
+              type="text"
               name="password"
               id="password"
               placeholder="Şifrenizi giriniz"
