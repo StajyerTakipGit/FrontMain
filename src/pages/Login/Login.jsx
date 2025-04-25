@@ -11,16 +11,35 @@ function Login() {
   const mutation = useMutation({
     mutationFn: fetchlogin,
     onSuccess: (data) => {
-      console.log("Login başarılı", data);
+      console.log("Login başarılı - Tam yanıt:", data);
+      
+      // Token ve kullanıcı bilgilerini sakla
       localStorage.setItem("token", data.access);
       localStorage.setItem("user", JSON.stringify(data));
-      navigate("/ogrenci");
+      
+      // Rol bilgisini al ve küçük harfe çevir
+      const userRole = data.rol ? data.rol.toLowerCase() : 'ogrenci';
+      console.log("Kullanıcı rolü:", userRole);
+      
+      // Rol bazlı yönlendirme
+      switch(userRole) {
+        case 'admin':
+          navigate("/admin");
+          break;
+        case 'kurum':
+          navigate("/kurum");
+          break;
+        case 'ogrenci':
+        default:
+          navigate("/ogrenci");
+      }
     },
     onError: (error) => {
       if (error.response && error.response.status === 401) {
         alert("Kullanıcı adı veya şifre yanlış.");
+      } else {
+        alert("Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.");
       }
-
       console.error("Login hatası:", error);
     },
   });
@@ -66,39 +85,45 @@ function Login() {
             mutation.mutate(values);
           }}
         >
-          <Form>
-            <label htmlFor="email" className={styles.label}>
-              Kullanıcı Adı
-            </label>
-            <Field
-              type="text"
-              name="email"
-              id="email"
-              placeholder="Kullanıcı adınızı giriniz"
-              className={styles.input}
-            />
-            <ErrorMessage name="email">
-              {(msg) => <div className={styles.error}>{msg || "\u00A0"}</div>}
-            </ErrorMessage>
+          {({ isSubmitting }) => (
+            <Form>
+              <label htmlFor="email" className={styles.label}>
+                Kullanıcı Adı
+              </label>
+              <Field
+                type="text"
+                name="email"
+                id="email"
+                placeholder="Kullanıcı adınızı giriniz"
+                className={styles.input}
+              />
+              <ErrorMessage name="email">
+                {(msg) => <div className={styles.error}>{msg || "\u00A0"}</div>}
+              </ErrorMessage>
 
-            <label htmlFor="password" className={styles.label}>
-              Şifre
-            </label>
-            <Field
-              type="text"
-              name="password"
-              id="password"
-              placeholder="Şifrenizi giriniz"
-              className={styles.input}
-            />
-            <ErrorMessage name="password">
-              {(msg) => <div className={styles.error}>{msg || "\u00A0"}</div>}
-            </ErrorMessage>
+              <label htmlFor="password" className={styles.label}>
+                Şifre
+              </label>
+              <Field
+                type="password"
+                name="password"
+                id="password"
+                placeholder="Şifrenizi giriniz"
+                className={styles.input}
+              />
+              <ErrorMessage name="password">
+                {(msg) => <div className={styles.error}>{msg || "\u00A0"}</div>}
+              </ErrorMessage>
 
-            <button type="submit" className={styles.btn1}>
-              Giriş yap
-            </button>
-          </Form>
+              <button 
+                type="submit" 
+                className={styles.btn1}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Giriş Yapılıyor...' : 'Giriş yap'}
+              </button>
+            </Form>
+          )}
         </Formik>
       </div>
     </div>

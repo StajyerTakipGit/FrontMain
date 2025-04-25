@@ -1,5 +1,5 @@
 import axios from "axios";
-const apiUrl = "http://192.168.68.74:8000";
+const apiUrl = "http://127.0.0.1:8000";
 
 export const fetchlogin = async (userData) => {
   try {
@@ -178,3 +178,53 @@ export const reddetStaj = async (stajId) => {
   }
 };
 
+
+
+// Gerçek API fonksiyonları (mock yerine)
+export const getKurumStajyerleri1 = async () => {
+  const response = await axios.get(`${apiUrl}/api/admin/stajlar/`);
+  return response.data;
+};
+
+export const onaylaStaj1 = async (stajId) => {
+  const response = await axios.patch(`${apiUrl}/api/admin/stajlar/${stajId}/`, {
+    admin_onay: true
+  });
+  return response.data;
+};
+
+export const reddetStaj1 = async (stajId) => {
+  const response = await axios.patch(`${apiUrl}/api/admin/stajlar/${stajId}/`, {
+    admin_onay: false
+  });
+  return response.data;
+};
+
+
+
+
+
+
+// Token'ı localStorage'dan al (eğer gerekiyorsa)
+const token = localStorage.getItem("token");
+const headers = {
+  Authorization: `Bearer ${token}`,
+};
+
+// 1. Başvuran Stajyerleri Listele
+export const getKurumStajyerleri2 = async () => {
+  const response = await axios.get("/api/kurum/stajyerler/", { headers });
+  return response.data;
+};
+
+// 2. Staj Onaylama / Puan Verme (sadece onay içinse body boş kalabilir)
+export const onaylaStaj2 = async (id) => {
+  const response = await axios.patch(`/api/kurum/stajyerler/${id}/`, {}, { headers });
+  return response.data;
+};
+
+// 3. Reddetme
+export const reddetStaj2 = async (id) => {
+  const response = await axios.post(`/api/kurum/stajyerler/${id}/reddet/`, {}, { headers });
+  return response.data;
+};

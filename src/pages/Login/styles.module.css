@@ -141,3 +141,31 @@
 .btn1:hover {
   background-color: #2e4cd5;
 }
+
+
+/* Geliştirme butonları için stiller */
+.devButtons {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.devButton {
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.devButton:hover {
+  background-color: #e0e0e0;
+}
+
+/* Buton yükleme durumu */
+button[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
