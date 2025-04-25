@@ -54,6 +54,33 @@ function Ogrenci() {
     bitis_tarihi: "",
     konu: "",
   });
+  const turkishMonths = [
+    "Ocak",
+    "Şubat",
+    "Mart",
+    "Nisan",
+    "Mayıs",
+    "Haziran",
+    "Temmuz",
+    "Ağustos",
+    "Eylül",
+    "Ekim",
+    "Kasım",
+    "Aralık",
+  ];
+  const currentMonth = new Date().getMonth(); // 0-index
+  const currentMonthName = turkishMonths[currentMonth];
+
+  // Kartlar için mevcut staj bilgilerini tutacak state
+  const [currentStaj, setCurrentStaj] = useState({
+    staj_no: "-",
+    kurum_adi: "Henüz staj yok",
+    baslangic_tarihi: "-",
+    bitis_tarihi: "-",
+    konu: "-",
+    tamamlanan_gun: 0,
+    kalan_gun: 0,
+  });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -61,6 +88,23 @@ function Ogrenci() {
       ...prevState,
       [name]: value,
     }));
+  };
+
+  // Tarih formatını değiştiren fonksiyon
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === "-") return "-";
+
+    try {
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${year}.${month}.${day}`;
+    } catch (error) {
+      console.error("Tarih formatı hatası:", error);
+      return dateString;
+    }
   };
 
   // Fixed useMutation implementation
@@ -88,7 +132,6 @@ function Ogrenci() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [animating, setAnimating] = useState(false);
 
-  // Removed unused state
   const {
     data,
     isLoading,
@@ -99,35 +142,109 @@ function Ogrenci() {
     queryFn: getProfile,
   });
 
+  // İki tarih arasındaki gün sayısını hesaplamak için yardımcı fonksiyon
+  const calculateDaysBetween = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // Geçen gün sayısını hesaplayan yardımcı fonksiyon
+  const calculateCompletedDays = (startDate) => {
+    const start = new Date(startDate);
+    const today = new Date();
+    if (today < start) return 0;
+
+    const diffTime = Math.abs(today - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // En güncel stajı bulup state'i güncelleyen useEffect
+  console.log(data);
+  useEffect(() => {
+    if (data && data.length > 0) {
+      // Başlangıç tarihlerine göre sıralayarak en yeni stajı bulalım
+      const sortedInternships = [...data].sort((a, b) => {
+        return new Date(b.baslangic_tarihi) - new Date(a.baslangic_tarihi);
+      });
+
+      const latestInternship = sortedInternships[0];
+
+      // Tamamlanan gün ve kalan gün hesaplamaları
+      const totalDays = calculateDaysBetween(
+        latestInternship.baslangic_tarihi,
+        latestInternship.bitis_tarihi
+      );
+      const completedDays = calculateCompletedDays(
+        latestInternship.baslangic_tarihi
+      );
+      const remainingDays = totalDays - completedDays;
+
+      setCurrentStaj({
+        staj_no: latestInternship.id,
+        kurum_adi: latestInternship.kurum_adi,
+        baslangic_tarihi: latestInternship.baslangic_tarihi,
+        bitis_tarihi: latestInternship.bitis_tarihi,
+        konu: latestInternship.konu,
+        tamamlanan_gun: completedDays > 0 ? completedDays : 0,
+        kalan_gun: remainingDays > 0 ? remainingDays : 0,
+        progress: (completedDays / totalDays) * 100, // İlerleme yüzdesi
+      });
+    }
+  }, [data]);
+  const [defterSayisi, setDefterSayisi] = useState(0);
+  const [PuantajSayisi, setPuantajSayisi] = useState(0);
+  useEffect(() => {
+    const storedData = JSON.parse(localStorage.getItem("data")) || [];
+    const filtered = storedData.filter(
+      (item) => item.staj_no === currentStaj.staj_no
+    );
+
+    const defterler = filtered.filter((item) => item.diary);
+    const puantajlar = filtered.filter((item) => item.status);
+
+    setDefterSayisi(defterler.length);
+    setPuantajSayisi(puantajlar.length);
+  }, [currentStaj.staj_no]);
+  // Dinamik kartlar
   const cards = [
     {
       title: "Mevcut Stajım",
-      value: "Softalya",
-      subtitle: "10.02.2025-23.05.2025",
+      value: currentStaj.kurum_adi,
+      subtitle:
+        currentStaj.baslangic_tarihi && currentStaj.bitis_tarihi
+          ? `${formatDate(currentStaj.baslangic_tarihi)}-${formatDate(
+              currentStaj.bitis_tarihi
+            )}`
+          : "Staj bilgisi yok",
       icon: faBriefcase,
     },
     {
       title: "Staj Günleri",
-      value: "45",
+      value: currentStaj.tamamlanan_gun.toString(),
       subtitle: "Toplam tamamlanan gün",
       icon: faCalendarCheck,
+      progress: currentStaj.progress,
     },
     {
       title: "Staj Günleri",
-      value: "67",
+      value: currentStaj.kalan_gun.toString(),
       subtitle: "Kalan gün",
       icon: faHourglassHalf,
     },
     {
       title: "Defterler",
-      value: "28/30",
-      subtitle: "Mart ayı doldurulmuş günlük",
+      value: `${defterSayisi}/30`,
+      subtitle: `${currentMonthName} ayı doldurulmuş günlük`,
       icon: faBook,
     },
     {
       title: "Puantaj çizelgesi",
-      value: "20/30",
-      subtitle: "Mart ayı doldurulmuş puantaj",
+      value: `${PuantajSayisi}/30`,
+      subtitle: `${currentMonthName} ayı doldurulmuş puantaj`,
       icon: faClipboardCheck,
     },
   ];
@@ -259,7 +376,7 @@ function Ogrenci() {
                           <div className="progress-container">
                             <div
                               className="progress-bar"
-                              style={{ width: "40%" }}
+                              style={{ width: `${card.progress || 0}%` }}
                             ></div>
                           </div>
                         )}
@@ -382,34 +499,40 @@ function Ogrenci() {
                 </Thead>
                 <Tbody backgroundColor="white" color="black">
                   {data && data.length > 0 ? (
-                    data.map((staj, index) => (
-                      <Tr key={index}>
-                        <Td>{staj.kurum_adi}</Td>
-                        <Td>{staj.konu}</Td>
-                        <Td>{staj.baslangic_tarihi}</Td>
-                        <Td>{staj.bitis_tarihi}</Td>
-                        <Td>
-                          {staj.kurum_onaylandi ? (
-                            <Badge colorScheme="green">Onaylandı</Badge>
-                          ) : (
-                            <Badge colorScheme="yellow">Beklemede</Badge>
-                          )}
-                        </Td>
-                        <Td>
-                          <Button
-                            size="sm"
-                            colorScheme="blue"
-                            onClick={() =>
-                              navigate(`/staj-detay/${staj.id}`, {
-                                state: { staj },
-                              })
-                            }
-                          >
-                            Görüntüle
-                          </Button>
-                        </Td>
-                      </Tr>
-                    ))
+                    [...data]
+                      .sort(
+                        (a, b) =>
+                          new Date(b.baslangic_tarihi) -
+                          new Date(a.baslangic_tarihi)
+                      )
+                      .map((staj, index) => (
+                        <Tr key={index}>
+                          <Td>{staj.kurum_adi}</Td>
+                          <Td>{staj.konu}</Td>
+                          <Td>{staj.baslangic_tarihi}</Td>
+                          <Td>{staj.bitis_tarihi}</Td>
+                          <Td>
+                            {staj.kurum_onaylandi ? (
+                              <Badge colorScheme="green">Onaylandı</Badge>
+                            ) : (
+                              <Badge colorScheme="yellow">Beklemede</Badge>
+                            )}
+                          </Td>
+                          <Td>
+                            <Button
+                              size="sm"
+                              colorScheme="blue"
+                              onClick={() =>
+                                navigate(`/staj-detay/${staj.id}`, {
+                                  state: { staj },
+                                })
+                              }
+                            >
+                              Görüntüle
+                            </Button>
+                          </Td>
+                        </Tr>
+                      ))
                   ) : (
                     <Tr>
                       <Td colSpan={6} textAlign="center">
