@@ -26,6 +26,7 @@ const StajDetay = () => {
   if (!staj) {
     return <Text>Staj bilgisi bulunamadı.</Text>;
   }
+  console.log(staj);
 
   return (
     <>

@@ -1,5 +1,5 @@
 import axios from "axios";
-const apiUrl = "http://192.168.68.74:8000";
+const apiUrl = "http://10.0.1.93:8000";
 
 export const fetchlogin = async (userData) => {
   try {
@@ -40,6 +40,33 @@ export const getProfile = async () => {
   }
 };
 
+export const getDefter = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("Token bulunamadı. Lütfen giriş yapınız.");
+    }
+
+    const response = await axios.get(
+      `${apiUrl}/api/ogrenci/stajlar/${id}/defter/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "API isteği hatası:",
+      error.response ? error.response : error.message
+    );
+    throw error;
+  }
+};
+
 export const YeniStaj = async (stajData) => {
   try {
     const token = localStorage.getItem("token");
@@ -63,7 +90,7 @@ export const YeniStaj = async (stajData) => {
     throw error;
   }
 };
-export const DefteriYukle = (staj, gunler, toast) => {
+export const DefteriYukle = (staj, gun_no, content, toast) => {
   const token = localStorage.getItem("token");
 
   if (!token) {
@@ -77,12 +104,13 @@ export const DefteriYukle = (staj, gunler, toast) => {
     return;
   }
 
-  gunler.forEach((g) => {
-    axios.post(
+  // Send a single entry (gun_no and content) to the backend
+  axios
+    .post(
       `${apiUrl}/api/ogrenci/stajlar/${staj.id}/defter/`,
       {
-        gun_no: g.date,
-        icerik: g.content,
+        gun_no: gun_no,
+        icerik: content,
       },
       {
         headers: {
@@ -90,10 +118,30 @@ export const DefteriYukle = (staj, gunler, toast) => {
           "Content-Type": "application/json",
         },
       }
-    );
-  });
+    )
+    .then((response) => {
+      toast({
+        title: "Başarıyla Kaydedildi",
+        description: "Günlük başarıyla kaydedildi.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    })
+    .catch((error) => {
+      toast({
+        title: "Hata",
+        description: "Bir hata oluştu. Lütfen tekrar deneyin.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      console.error("Error:", error.message); // Log error details
+    });
 };
-
 
 // src/mockApi.js (veya src/api.js içinde)
 
@@ -126,7 +174,7 @@ let mockStajyerler = [
     bitis_tarihi: "2024-08-20",
     durum: "Reddedildi",
   },
-    {
+  {
     id: 4,
     ogrenci_adi: "Ali Vural",
     okul_adi: "Yıldız Teknik Üniversitesi",
@@ -139,20 +187,19 @@ let mockStajyerler = [
 
 // Sahte ağ gecikmesi simülasyonu için yardımcı fonksiyon
 const simulateNetworkDelay = (delay = 500) =>
-  new Promise(resolve => setTimeout(resolve, delay));
+  new Promise((resolve) => setTimeout(resolve, delay));
 
 export const getKurumStajyerleri = async () => {
   console.log("Mock API: getKurumStajyerleri çağrıldı.");
   await simulateNetworkDelay(); // Ağ gecikmesini simüle et
-  
-  return [...mockStajyerler]; 
-};
 
+  return [...mockStajyerler];
+};
 
 export const onaylaStaj = async (stajId) => {
   console.log(`Mock API: onaylaStaj çağrıldı (ID: ${stajId}).`);
   await simulateNetworkDelay();
-  const stajIndex = mockStajyerler.findIndex(staj => staj.id === stajId);
+  const stajIndex = mockStajyerler.findIndex((staj) => staj.id === stajId);
   if (stajIndex !== -1) {
     mockStajyerler[stajIndex].durum = "Onaylandı";
     console.log("Mock Data Güncellendi:", mockStajyerler[stajIndex]);
@@ -167,7 +214,7 @@ export const onaylaStaj = async (stajId) => {
 export const reddetStaj = async (stajId) => {
   console.log(`Mock API: reddetStaj çağrıldı (ID: ${stajId}).`);
   await simulateNetworkDelay();
-  const stajIndex = mockStajyerler.findIndex(staj => staj.id === stajId);
+  const stajIndex = mockStajyerler.findIndex((staj) => staj.id === stajId);
   if (stajIndex !== -1) {
     mockStajyerler[stajIndex].durum = "Reddedildi";
     console.log("Mock Data Güncellendi:", mockStajyerler[stajIndex]);
@@ -177,4 +224,3 @@ export const reddetStaj = async (stajId) => {
     throw new Error("Staj bulunamadı.");
   }
 };
-

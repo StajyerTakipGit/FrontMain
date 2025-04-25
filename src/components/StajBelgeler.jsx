@@ -11,45 +11,54 @@ import {
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import styles from "./styles.module.css";
+import { useLocation } from "react-router-dom";
+import { getDefter, DefteriYukle } from "../api";
 
 const statusOptions = ["İzinli", "Raporlu", "Geldi"];
 
 export const StajGunuEditor = () => {
+  const location = useLocation();
+  const staj = location.state?.staj;
+  const id = staj.id;
+  const ogrenci = staj.ogrenci;
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [diaryContent, setDiaryContent] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [backendEntries, setBackendEntries] = useState([]);
   const toast = useToast();
+
+  useEffect(() => {
+    // Get entries from backend
+    getDefter(id)
+      .then((res) => {
+        setBackendEntries(res); // Set backend entries
+      })
+      .catch((error) => {
+        console.error("Error:", error.message); // Handle errors
+      });
+  }, [id]);
+
+  // Get local date in string format (YYYY-MM-DD)
   const getLocalDateString = (date) => {
     const offset = date.getTimezoneOffset();
     const localDate = new Date(date.getTime() - offset * 60 * 1000);
-    return localDate.toISOString().split("T")[0];
+    return localDate.toISOString().split("T")[0]; // Ensure the format is YYYY-MM-DD
   };
 
   const formattedDate = getLocalDateString(selectedDate);
 
-  // 📌 Tarih değiştikçe localStorage'dan veri çek
+  // Handle date change and find the corresponding diary entry
   useEffect(() => {
-    const storedData = localStorage.getItem("data");
-    if (storedData) {
-      const dataList = JSON.parse(storedData);
-      const matched = dataList.find((item) => item.date === formattedDate);
-
-      if (matched) {
-        setDiaryContent(matched.diary || "");
-        setSelectedStatus(matched.status || "");
-      } else {
-        setDiaryContent("");
-        setSelectedStatus("");
-      }
+    const selectedEntry = backendEntries.find(
+      (entry) => entry.gun_no === formattedDate
+    );
+    if (selectedEntry) {
+      setDiaryContent(selectedEntry.icerik); // Set content if entry found
     } else {
-      setDiaryContent("");
-      setSelectedStatus("");
+      setDiaryContent(""); // Clear if no entry found for the selected date
     }
-  }, [formattedDate]);
-
-  const handleStatusClick = (status) => {
-    setSelectedStatus((prev) => (prev === status ? "" : status));
-  };
+  }, [formattedDate, backendEntries]);
 
   const handleSave = () => {
     if (!diaryContent.trim()) {
@@ -63,24 +72,11 @@ export const StajGunuEditor = () => {
       return;
     }
 
-    const newEntry = {
-      date: formattedDate,
-      diary: diaryContent,
-      status: selectedStatus,
-    };
+    const gun_no = formattedDate; // Ensure gun_no is correctly formatted
+    const content = diaryContent;
 
-    // 📥 Eski kayıtları çek
-    const storedData = localStorage.getItem("data");
-    let dataList = storedData ? JSON.parse(storedData) : [];
-
-    // 🔁 Aynı tarihte kayıt varsa üzerine yaz (önce filtrele)
-    dataList = dataList.filter((item) => item.date !== formattedDate);
-
-    // ➕ Yeni kaydı ekle
-    dataList.push(newEntry);
-
-    // 💾 Güncellenmiş listeyi kaydet
-    localStorage.setItem("data", JSON.stringify(dataList));
+    // Ensure newEntry is correctly sent to API
+    DefteriYukle(staj, gun_no, content, toast); // Send data using DefteriYukle
 
     toast({
       title: "Başarıyla Kaydedildi",
@@ -90,9 +86,8 @@ export const StajGunuEditor = () => {
       isClosable: true,
     });
 
-    // ✅ Inputları temizle
-    setDiaryContent("");
-    setSelectedStatus("");
+    setDiaryContent(""); // Clear diary content after save
+    setSelectedStatus(""); // Reset status
   };
 
   return (
@@ -110,7 +105,7 @@ export const StajGunuEditor = () => {
         >
           <Calendar
             value={selectedDate}
-            onChange={setSelectedDate}
+            onChange={setSelectedDate} // Update selected date
             className={styles.takvim}
           />
           <Box
@@ -150,14 +145,32 @@ export const StajGunuEditor = () => {
             Staj Günlük Rapor
           </Text>
           <Textarea
-            color={"black"}
-            bg={"white"}
-            border={"3px solid black"}
-            borderRadius={"20px"}
-            height={"80%"}
             value={diaryContent}
-            onChange={(e) => setDiaryContent(e.target.value)}
+            onChange={(e) => setDiaryContent(e.target.value)} // Update diary content
             placeholder="Bugün neler yaptın?"
+            color="black"
+            lineHeight={"108px"}
+            bg="white"
+            border="3px solid #2c3e50"
+            resize="none"
+            boxShadow="0 4px 10px rgba(0,0,0,0.1)"
+            borderRadius="20px"
+            height="80%"
+            sx={{
+              backgroundImage: `repeating-linear-gradient(
+                to bottom, 
+                #ffffff 16px, 
+                #ffffff 30px, 
+                #cce5ff 32px
+              ),
+              linear-gradient(to right, #ff9999 40px, transparent 40px)`,
+
+              backgroundSize: "100% 28px",
+              backgroundAttachment: "local",
+              fontFamily: "monospace",
+              lineHeight: "28px",
+              padding: "20px",
+            }}
           />
         </Box>
       </Box>

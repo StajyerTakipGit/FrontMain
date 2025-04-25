@@ -45,8 +45,16 @@ import { getKurumStajyerleri, onaylaStaj, reddetStaj } from "../../api"; // Vars
 function Kurum() {
   const navigate = useNavigate();
   const toast = useToast(); // Toast hook'u
-  const { isOpen: isApproveOpen, onOpen: onApproveOpen, onClose: onApproveClose } = useDisclosure();
-  const { isOpen: isRejectOpen, onOpen: onRejectOpen, onClose: onRejectClose } = useDisclosure();
+  const {
+    isOpen: isApproveOpen,
+    onOpen: onApproveOpen,
+    onClose: onApproveClose,
+  } = useDisclosure();
+  const {
+    isOpen: isRejectOpen,
+    onOpen: onRejectOpen,
+    onClose: onRejectClose,
+  } = useDisclosure();
   const [selectedStaj, setSelectedStaj] = useState(null); // Seçilen stajyeri tutmak için state
 
   // Kuruma ait stajyerleri getiren query
@@ -144,13 +152,13 @@ function Kurum() {
   const cards = [
     {
       title: "Aktif Stajyerler",
-      value: stajyerler?.filter(s => s.durum === 'Onaylandı').length || 0, // API'den gelen veriye göre hesaplanmalı
+      value: stajyerler?.filter((s) => s.durum === "Onaylandı").length || 0, // API'den gelen veriye göre hesaplanmalı
       subtitle: "Şu anda staj yapan öğrenci sayısı",
       icon: faUserCheck,
     },
     {
       title: "Bekleyen Başvurular",
-      value: stajyerler?.filter(s => s.durum === 'Beklemede').length || 0, // API'den gelen veriye göre hesaplanmalı
+      value: stajyerler?.filter((s) => s.durum === "Beklemede").length || 0, // API'den gelen veriye göre hesaplanmalı
       subtitle: "Onayınızı bekleyen staj başvuruları",
       icon: faUserClock,
     },
@@ -190,11 +198,12 @@ function Kurum() {
   const goToNext = () => {
     if (animating) return;
     setAnimating(true);
-    setCurrentIndex((prev) => Math.min(prev + 1, Math.max(0, cards.length - visibleCards)));
+    setCurrentIndex((prev) =>
+      Math.min(prev + 1, Math.max(0, cards.length - visibleCards))
+    );
     setTimeout(() => setAnimating(false), 500);
   };
   // --- Kart Slider Logic Bitiş ---
-
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -209,10 +218,14 @@ function Kurum() {
 
   return (
     <>
-      {isSidebarOpen && <Sidebar userType="kurum" />} {/* userType prop'u eklendi */}
-      <div className="kurum-content"> {/* Ana içerik için farklı class */}
-        <Header toggleSidebar={toggleSidebar} /* kurumAdi={kurumProfili?.adi} */ />
-
+      {isSidebarOpen && <Sidebar userType="kurum" />}{" "}
+      {/* userType prop'u eklendi */}
+      <div className="kurum-content">
+        {" "}
+        {/* Ana içerik için farklı class */}
+        <Header
+          toggleSidebar={toggleSidebar} /* kurumAdi={kurumProfili?.adi} */
+        />
         {/* Kartlar Bölümü */}
         <div className="kurum-rows">
           <div className="kurum-rows-border">
@@ -221,8 +234,14 @@ function Kurum() {
                 <IconButton
                   aria-label="Previous"
                   icon={<FontAwesomeIcon icon={faChevronLeft} />}
-                  position="absolute" left="-15px" top="38%" zIndex={2}
-                  rounded="full" onClick={goToPrevious} bg="white" shadow="md"
+                  position="absolute"
+                  left="-15px"
+                  top="38%"
+                  zIndex={2}
+                  rounded="full"
+                  onClick={goToPrevious}
+                  bg="white"
+                  shadow="md"
                   isDisabled={animating}
                 />
               )}
@@ -231,42 +250,71 @@ function Kurum() {
                   width={`${(cards.length / visibleCards) * 100}%`} // Dinamik genişlik
                   gap={4}
                   transition="transform 0.5s ease-in-out"
-                  style={{ transform: `translateX(-${currentIndex * (100 / cards.length)}%)` }} // Kaydırma hesabı düzeltildi
+                  style={{
+                    transform: `translateX(-${
+                      currentIndex * (100 / cards.length)
+                    }%)`,
+                  }} // Kaydırma hesabı düzeltildi
                 >
                   {cards.map((card, index) => (
                     <Box
-                      key={index} p={6} rounded="2xl" shadow="md"
+                      key={index}
+                      p={6}
+                      rounded="2xl"
+                      shadow="md"
                       className="kurum-box" // Kurum kartları için class
-                      minWidth={`calc(${100 / visibleCards}% - ${4 * (visibleCards - 1)}px)`} // Dinamik minWidth
+                      minWidth={`calc(${100 / visibleCards}% - ${
+                        4 * (visibleCards - 1)
+                      }px)`} // Dinamik minWidth
                       flexShrink={0}
                     >
                       <Flex justify="space-between" align="center">
-                        <Text fontSize="lg" color="gray.600">{card.title}</Text>
-                        <FontAwesomeIcon icon={card.icon} size="lg" color="#4A5568" />
+                        <Text fontSize="lg" color="gray.600">
+                          {card.title}
+                        </Text>
+                        <FontAwesomeIcon
+                          icon={card.icon}
+                          size="lg"
+                          color="#4A5568"
+                        />
                       </Flex>
-                      <Text fontWeight="bold" fontSize="2xl" mt={2}>{card.value}</Text>
-                      <Text mt={2} color="gray.500" fontSize="sm">{card.subtitle}</Text>
+                      <Text fontWeight="bold" fontSize="2xl" mt={2}>
+                        {card.value}
+                      </Text>
+                      <Text mt={2} color="gray.500" fontSize="sm">
+                        {card.subtitle}
+                      </Text>
                       {/* Kartlara özel başka bileşenler eklenebilir, örn. progress bar */}
                     </Box>
                   ))}
                 </Flex>
               </Box>
               {currentIndex < cards.length - visibleCards && (
-                 <IconButton
+                <IconButton
                   aria-label="Next"
                   icon={<FontAwesomeIcon icon={faChevronRight} />}
-                  position="absolute" right="-15px" top="38%" zIndex={2}
-                  rounded="full" onClick={goToNext} bg="white" shadow="md"
+                  position="absolute"
+                  right="-15px"
+                  top="38%"
+                  zIndex={2}
+                  rounded="full"
+                  onClick={goToNext}
+                  bg="white"
+                  shadow="md"
                   isDisabled={animating}
                 />
               )}
             </Flex>
           </div>
         </div>
-
         {/* Stajyer Listesi Tablosu */}
         <Box
-          bg="white" color="black" p={5} borderRadius="lg" m={6} /* Margin eklendi */
+          bg="white"
+          color="black"
+          p={5}
+          borderRadius="lg"
+          m={6}
+          mt={3} /* Margin eklendi */
           boxShadow="md" /* Gölge eklendi */
         >
           <Flex mb={4} align="center">
@@ -278,11 +326,19 @@ function Kurum() {
             {/* <Button colorScheme="blue" onClick={onOpen}>+ Yeni Stajyer Ekle?</Button> */}
           </Flex>
 
-          <Box maxHeight="400px" overflowY="auto" className="kurum-staj-tablosu">
+          <Box
+            maxHeight="227px"
+            overflowY="auto"
+            className="kurum-staj-tablosu"
+          >
             {isLoading ? (
-              <Text textAlign="center" p={4}>Yükleniyor...</Text>
+              <Text textAlign="center" p={4}>
+                Yükleniyor...
+              </Text>
             ) : fetchError ? (
-              <Text textAlign="center" color="red.500" p={4}>Stajyerler yüklenirken bir hata oluştu.</Text>
+              <Text textAlign="center" color="red.500" p={4}>
+                Stajyerler yüklenirken bir hata oluştu.
+              </Text>
             ) : (
               <Table variant="simple" size="md">
                 <Thead position="sticky" top={0} bg="gray.100" zIndex={1}>
@@ -307,18 +363,20 @@ function Kurum() {
                         <Td>{staj.bitis_tarihi || "N/A"}</Td>
                         <Td>
                           <Badge
-                             colorScheme={
-                               staj.durum === 'Onaylandı' ? 'green' :
-                               staj.durum === 'Reddedildi' ? 'red' :
-                               'yellow' // Beklemede için
-                             }
-                             variant="subtle" // Daha yumuşak görünüm
+                            colorScheme={
+                              staj.durum === "Onaylandı"
+                                ? "green"
+                                : staj.durum === "Reddedildi"
+                                ? "red"
+                                : "yellow" // Beklemede için
+                            }
+                            variant="subtle" // Daha yumuşak görünüm
                           >
-                            {staj.durum || 'Beklemede'}
+                            {staj.durum || "Beklemede"}
                           </Badge>
                         </Td>
                         <Td textAlign="center">
-                          {staj.durum === 'Beklemede' ? (
+                          {staj.durum === "Beklemede" ? (
                             <Flex justify="center" gap={2}>
                               <IconButton
                                 aria-label="Onayla"
@@ -326,7 +384,9 @@ function Kurum() {
                                 colorScheme="green"
                                 size="sm"
                                 onClick={() => handleApproveClick(staj)}
-                                isLoading={isApproving && selectedStaj?.id === staj.id}
+                                isLoading={
+                                  isApproving && selectedStaj?.id === staj.id
+                                }
                               />
                               <IconButton
                                 aria-label="Reddet"
@@ -334,7 +394,9 @@ function Kurum() {
                                 colorScheme="red"
                                 size="sm"
                                 onClick={() => handleRejectClick(staj)}
-                                isLoading={isRejecting && selectedStaj?.id === staj.id}
+                                isLoading={
+                                  isRejecting && selectedStaj?.id === staj.id
+                                }
                               />
                             </Flex>
                           ) : (
@@ -342,7 +404,9 @@ function Kurum() {
                               size="sm"
                               variant="outline"
                               colorScheme="blue"
-                              onClick={() => navigate(`/kurum/stajyer-detay/${staj.id}`)} // Detay sayfasına yönlendirme
+                              onClick={() =>
+                                navigate(`/kurum/stajyer-detay/${staj.id}`)
+                              } // Detay sayfasına yönlendirme
                             >
                               Detay Gör
                             </Button>
@@ -362,7 +426,6 @@ function Kurum() {
             )}
           </Box>
         </Box>
-
         {/* Onaylama Modalı */}
         <Modal isOpen={isApproveOpen} onClose={onApproveClose} isCentered>
           <ModalOverlay />
@@ -371,20 +434,29 @@ function Kurum() {
             <ModalCloseButton />
             <ModalBody>
               <Text>
-                <strong>{selectedStaj?.ogrenci_adi}</strong> adlı öğrencinin staj başvurusunu onaylamak istediğinize emin misiniz?
+                <strong>{selectedStaj?.ogrenci_adi}</strong> adlı öğrencinin
+                staj başvurusunu onaylamak istediğinize emin misiniz?
               </Text>
             </ModalBody>
             <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onApproveClose} isDisabled={isApproving}>
+              <Button
+                variant="ghost"
+                mr={3}
+                onClick={onApproveClose}
+                isDisabled={isApproving}
+              >
                 İptal
               </Button>
-              <Button colorScheme="green" onClick={confirmApprove} isLoading={isApproving}>
+              <Button
+                colorScheme="green"
+                onClick={confirmApprove}
+                isLoading={isApproving}
+              >
                 Onayla
               </Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
-
         {/* Reddetme Modalı */}
         <Modal isOpen={isRejectOpen} onClose={onRejectClose} isCentered>
           <ModalOverlay />
@@ -393,22 +465,31 @@ function Kurum() {
             <ModalCloseButton />
             <ModalBody>
               <Text>
-                <strong>{selectedStaj?.ogrenci_adi}</strong> adlı öğrencinin staj başvurusunu reddetmek istediğinize emin misiniz?
+                <strong>{selectedStaj?.ogrenci_adi}</strong> adlı öğrencinin
+                staj başvurusunu reddetmek istediğinize emin misiniz?
               </Text>
               {/* İsteğe bağlı: Reddetme nedeni için bir input eklenebilir */}
               {/* <Textarea placeholder="Reddetme nedeni (isteğe bağlı)" mt={3} /> */}
             </ModalBody>
             <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onRejectClose} isDisabled={isRejecting}>
+              <Button
+                variant="ghost"
+                mr={3}
+                onClick={onRejectClose}
+                isDisabled={isRejecting}
+              >
                 İptal
               </Button>
-              <Button colorScheme="red" onClick={confirmReject} isLoading={isRejecting}>
+              <Button
+                colorScheme="red"
+                onClick={confirmReject}
+                isLoading={isRejecting}
+              >
                 Reddet
               </Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
-
       </div>
     </>
   );
