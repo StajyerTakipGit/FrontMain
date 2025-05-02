@@ -18,11 +18,10 @@ function App() {
         <Route path="/ogrenci" element={<Ogrenci />} />
         <Route path="/profil" element={<Profil />} />
         <Route path="/kurum" element={<Kurum />} />
-        
+        <Route path="/staj-detay/:id" element={<StajDetay />} />
         {/* Admin Route'ları */}
         <Route path="/admin" element={<Admin />} />
-        <Route path="/admin/staj-detay/:id" element={<StajDetay />} /> {/* Güncellendi */}
-        
+
         <Route path="/staj-defteri/:id" element={<StajDefteri />} />
       </Routes>
     </BrowserRouter>
