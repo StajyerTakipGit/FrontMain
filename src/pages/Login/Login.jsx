@@ -12,24 +12,24 @@ function Login() {
     mutationFn: fetchlogin,
     onSuccess: (data) => {
       console.log("Login başarılı - Tam yanıt:", data);
-      
+
       // Token ve kullanıcı bilgilerini sakla
       localStorage.setItem("token", data.access);
       localStorage.setItem("user", JSON.stringify(data));
-      
+
       // Rol bilgisini al ve küçük harfe çevir
-      const userRole = data.rol ? data.rol.toLowerCase() : 'ogrenci';
+      const userRole = data.rol ? data.rol.toLowerCase() : "ogrenci";
       console.log("Kullanıcı rolü:", userRole);
-      
+
       // Rol bazlı yönlendirme
-      switch(userRole) {
-        case 'admin':
+      switch (userRole) {
+        case "admin":
           navigate("/admin");
           break;
-        case 'kurum':
+        case "kurum":
           navigate("/kurum");
           break;
-        case 'ogrenci':
+        case "ogrenci":
         default:
           navigate("/ogrenci");
       }
@@ -81,8 +81,12 @@ function Login() {
 
             return errors;
           }}
-          onSubmit={(values) => {
-            mutation.mutate(values);
+          onSubmit={(values, { setSubmitting }) => {
+            mutation.mutate(values, {
+              onSettled: () => {
+                setSubmitting(false); // Başarı da olsa hata da olsa submit durumunu sonlandır
+              },
+            });
           }}
         >
           {({ isSubmitting }) => (
@@ -115,12 +119,12 @@ function Login() {
                 {(msg) => <div className={styles.error}>{msg || "\u00A0"}</div>}
               </ErrorMessage>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className={styles.btn1}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Giriş Yapılıyor...' : 'Giriş yap'}
+                {isSubmitting ? "Giriş Yapılıyor..." : "Giriş yap"}
               </button>
             </Form>
           )}

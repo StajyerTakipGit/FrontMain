@@ -304,7 +304,7 @@ function Ogrenci() {
   return (
     <>
       {isSidebarOpen && <Sidebar userType="ogrenci" />}
-      <div className="content">
+      <div className={`content ${isSidebarOpen ? "content-shifted" : ""}`}>
         <Header toggleSidebar={toggleSidebar} />
 
         <div className="rows">
@@ -489,12 +489,12 @@ function Ogrenci() {
               <Table variant="simple">
                 <Thead position="sticky" top={0} bg="white" zIndex={1}>
                   <Tr>
-                    <Th>Kurum</Th>
-                    <Th>Departman</Th>
-                    <Th>Başlangıç</Th>
-                    <Th>Bitiş</Th>
-                    <Th>Durum</Th>
-                    <Th>İşlem</Th>
+                    <Th bg={"transparent"}>Kurum</Th>
+                    <Th bg={"transparent"}>Departman</Th>
+                    <Th bg={"transparent"}>Başlangıç</Th>
+                    <Th bg={"transparent"}>Bitiş</Th>
+                    <Th bg={"transparent"}>Durum</Th>
+                    <Th bg={"transparent"}>İşlem</Th>
                   </Tr>
                 </Thead>
                 <Tbody backgroundColor="white" color="black">
