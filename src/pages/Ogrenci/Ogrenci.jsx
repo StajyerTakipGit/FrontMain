@@ -304,7 +304,7 @@ function Ogrenci() {
   return (
     <>
       {isSidebarOpen && <Sidebar userType="ogrenci" />}
-      <div className={`content ${isSidebarOpen ? "content-shifted" : ""}`}>
+      <div className={`content`}>
         <Header toggleSidebar={toggleSidebar} />
 
         <div className="rows">
@@ -341,6 +341,7 @@ function Ogrenci() {
                     <Box
                       key={index}
                       p={6}
+                      color={"white"}
                       rounded="2xl"
                       shadow="md"
                       className="box"
@@ -355,7 +356,7 @@ function Ogrenci() {
                       }}
                       flexShrink={0}
                     >
-                      <Text fontSize="lg" color="gray.600">
+                      <Text fontSize="lg" color="white">
                         {card.title}
                         <FontAwesomeIcon
                           icon={card.icon}
@@ -368,7 +369,7 @@ function Ogrenci() {
                       </Text>
                       <Text
                         mt={2}
-                        color="gray.500"
+                        color="white"
                         fontSize={card.subtitle ? "sm" : "md"}
                       >
                         {card.subtitle}
@@ -411,6 +412,8 @@ function Ogrenci() {
           fontSize="18px"
           fontFamily="'Bebas Neue', sans-serif"
           p={5}
+          ml={"30px"}
+          mr={"30px"}
           borderRadius="lg"
         >
           <div style={{ position: "sticky", top: 0 }}>
@@ -419,7 +422,7 @@ function Ogrenci() {
                 Stajlarım
               </Text>
               <Spacer />
-              <Button colorScheme="blue" onClick={onOpen}>
+              <Button colorScheme="green" onClick={onOpen}>
                 + Yeni Staj Başvurusu
               </Button>
               <Modal isOpen={isOpen} onClose={onClose} isCentered>

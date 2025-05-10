@@ -41,14 +41,14 @@ const StajDetay = () => {
           shadow="md"
           maxWidth="100%"
           mx="150px"
-          mt={"97px"}
+          mt={"0px"}
         >
           <Text fontSize="2xl" fontWeight="bold" mb={4}>
             Staj Detayları
           </Text>
 
           {/* Tablo */}
-          <Table variant="simple" size="lg" width="100%">
+          <Table variant="unstyled" size="lg" width="100%">
             <Thead>
               <Tr>
                 <Th>Bilgi</Th>

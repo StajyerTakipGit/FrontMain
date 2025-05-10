@@ -2,8 +2,6 @@ import axios from "axios";
 
 const apiUrl = "http://127.0.0.1:8000";
 
-
-
 export const fetchlogin = async (userData) => {
   try {
     const response = await axios.post(`${apiUrl}/api/giris/`, {
@@ -95,7 +93,7 @@ export const YeniStaj = async (stajData) => {
 };
 export const DefteriYukle = (staj, gun_no, content, toast) => {
   const token = localStorage.getItem("token");
-
+  console.log("token çekildi");
   if (!token) {
     toast({
       title: "Hata",
@@ -133,6 +131,7 @@ export const DefteriYukle = (staj, gun_no, content, toast) => {
       setTimeout(() => {
         window.location.reload();
       }, 2000);
+      console.log(response);
     })
     .catch((error) => {
       toast({
@@ -145,7 +144,59 @@ export const DefteriYukle = (staj, gun_no, content, toast) => {
       console.error("Error:", error.message); // Log error details
     });
 };
+export const patchDefter = async ({ staj, gun_no, content, toast }) => {
+  const token = localStorage.getItem("token");
+  console.log("token çekildi");
+  if (!token) {
+    toast({
+      title: "Hata",
+      description: "Giriş yapmanız gerekiyor.",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
 
+  // Send a single entry (gun_no and content) to the backend
+  axios
+    .patch(
+      `${apiUrl}/api/ogrenci/stajlar/${staj.id}/defter/guncelle/`,
+      {
+        gun_no: gun_no,
+        icerik: content,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+    .then((response) => {
+      toast({
+        title: "Başarıyla Kaydedildi",
+        description: "Günlük başarıyla kaydedildi.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      console.log(response);
+    })
+    .catch((error) => {
+      toast({
+        title: "Hata",
+        description: "Bir hata oluştu. Lütfen tekrar deneyin.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      console.log({ gun_no, icerik: content });
+      console.error("Error:", error.message); // Log error details
+    });
+};
 // src/mockApi.js (veya src/api.js içinde)
 
 // Başlangıç için sahte stajyer verisi
@@ -228,9 +279,6 @@ export const reddetStaj = async (stajId) => {
   }
 };
 
-
-
-
 // Gerçek API fonksiyonları (mock yerine)
 export const getKurumStajyerleri1 = async () => {
   const response = await axios.get(`${apiUrl}/api/admin/stajlar/`);
@@ -239,22 +287,17 @@ export const getKurumStajyerleri1 = async () => {
 
 export const onaylaStaj1 = async (stajId) => {
   const response = await axios.patch(`${apiUrl}/api/admin/stajlar/${stajId}/`, {
-    admin_onay: true
+    admin_onay: true,
   });
   return response.data;
 };
 
 export const reddetStaj1 = async (stajId) => {
   const response = await axios.patch(`${apiUrl}/api/admin/stajlar/${stajId}/`, {
-    admin_onay: false
+    admin_onay: false,
   });
   return response.data;
 };
-
-
-
-
-
 
 // Token'ı localStorage'dan al (eğer gerekiyorsa)
 const token = localStorage.getItem("token");
@@ -270,12 +313,20 @@ export const getKurumStajyerleri2 = async () => {
 
 // 2. Staj Onaylama / Puan Verme (sadece onay içinse body boş kalabilir)
 export const onaylaStaj2 = async (id) => {
-  const response = await axios.patch(`/api/kurum/stajyerler/${id}/`, {}, { headers });
+  const response = await axios.patch(
+    `/api/kurum/stajyerler/${id}/`,
+    {},
+    { headers }
+  );
   return response.data;
 };
 
 // 3. Reddetme
 export const reddetStaj2 = async (id) => {
-  const response = await axios.post(`/api/kurum/stajyerler/${id}/reddet/`, {}, { headers });
+  const response = await axios.post(
+    `/api/kurum/stajyerler/${id}/reddet/`,
+    {},
+    { headers }
+  );
   return response.data;
 };

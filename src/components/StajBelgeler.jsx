@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -12,7 +13,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import styles from "./styles.module.css";
 import { useLocation } from "react-router-dom";
-import { getDefter, DefteriYukle } from "../api";
+import { getDefter, DefteriYukle, patchDefter } from "../api";
 
 const statusOptions = ["İzinli", "Raporlu", "Geldi"];
 
@@ -50,17 +51,28 @@ export const StajGunuEditor = () => {
 
   // Handle date change and find the corresponding diary entry
   useEffect(() => {
-    const selectedEntry = backendEntries.find(
-      (entry) => entry.gun_no === formattedDate
+    const sameDayEntries = backendEntries.filter(
+      (entry) =>
+        new Date(entry.gun_no).toISOString().split("T")[0] === formattedDate
     );
-    if (selectedEntry) {
-      setDiaryContent(selectedEntry.icerik); // Set content if entry found
+    const latestEntry = sameDayEntries.at(-1); // sonuncuyu al
+
+    if (latestEntry) {
+      setDiaryContent(latestEntry.icerik);
     } else {
-      setDiaryContent(""); // Clear if no entry found for the selected date
+      setDiaryContent("");
     }
   }, [formattedDate, backendEntries]);
 
-  const handleSave = () => {
+  const handleStatusClick = (status) => {
+    if (selectedStatus === status) {
+      setSelectedStatus(""); // aynı seçiliyse kaldır
+    } else {
+      setSelectedStatus(status);
+    }
+  };
+
+  const handleSave = async () => {
     if (!diaryContent.trim()) {
       toast({
         title: "Eksik Bilgi",
@@ -72,22 +84,58 @@ export const StajGunuEditor = () => {
       return;
     }
 
-    const gun_no = formattedDate; // Ensure gun_no is correctly formatted
+    const gun_no = formattedDate;
     const content = diaryContent;
 
-    // Ensure newEntry is correctly sent to API
-    DefteriYukle(staj, gun_no, content, toast); // Send data using DefteriYukle
+    try {
+      // backendEntries içinde mevcut kayıtları kontrol et
+      const matchingEntry = backendEntries.find(
+        (entry) => entry.gun_no === gun_no
+      );
 
-    toast({
-      title: "Başarıyla Kaydedildi",
-      description: `${formattedDate} günü için günlük kaydedildi.`,
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+      if (matchingEntry) {
+        // Kayıt varsa patch işlemi
+        await patchDefter({
+          staj, // staj bilgisi
+          gun_no, // tarih
+          content, // günlük içeriği
+          toast, // toast bildirimi
+          backendEntries, // mevcut backendEntries
+        });
 
-    setDiaryContent(""); // Clear diary content after save
-    setSelectedStatus(""); // Reset status
+        toast({
+          title: "Güncellendi",
+          description: `${gun_no} günü için günlük güncellendi.`,
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        // Kayıt yoksa ekleme işlemi
+        await DefteriYukle(staj, gun_no, content, toast, backendEntries);
+
+        toast({
+          title: "Başarıyla Kaydedildi",
+          description: `${gun_no} günü için günlük kaydedildi.`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+
+      // Formu sıfırla
+      setDiaryContent("");
+      setSelectedStatus("");
+    } catch (error) {
+      console.error("Günlük kaydında hata:", error);
+      toast({
+        title: "Hata",
+        description: "Günlük kaydedilirken bir hata oluştu.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -137,39 +185,45 @@ export const StajGunuEditor = () => {
           width={"75%"}
           mr={"5%"}
           ml={"5%"}
-          mt={"2%"}
+          mt={"0%"}
           height={"82%"}
           borderRadius={"20px"}
         >
-          <Text fontSize="2xl" fontWeight="bold" mb={0}>
+          <Text fontSize="2xl" fontWeight="bold" mb={0} ml={"30%"}>
             Staj Günlük Rapor
+          </Text>
+          <Text mb={0} fontWeight="bold" fontSize="xl" color="white">
+            {formattedDate}
           </Text>
           <Textarea
             value={diaryContent}
-            onChange={(e) => setDiaryContent(e.target.value)} // Update diary content
+            onChange={(e) => setDiaryContent(e.target.value)}
             placeholder="Bugün neler yaptın?"
             color="black"
-            lineHeight={"108px"}
             bg="white"
-            border="3px solid #2c3e50"
+            border={"1px solid black"}
             resize="none"
             boxShadow="0 4px 10px rgba(0,0,0,0.1)"
-            borderRadius="20px"
-            height="80%"
+            height="100%"
             sx={{
-              backgroundImage: `repeating-linear-gradient(
-                to bottom, 
-                #ffffff 16px, 
-                #ffffff 30px, 
-                #cce5ff 32px
-              ),
-              linear-gradient(to right, #ff9999 40px, transparent 40px)`,
-
-              backgroundSize: "100% 28px",
+              backgroundImage: `
+      linear-gradient(to bottom,
+        white 10px,
+        transparent 10px
+      ),
+      repeating-linear-gradient(
+        to bottom, 
+        transparent 0px,
+        transparent 27px, 
+rgb(106, 159, 215) 28px
+      )`,
+              backgroundPosition: "0 0",
+              backgroundSize: "100% 100%, 100% 28px",
               backgroundAttachment: "local",
               fontFamily: "monospace",
               lineHeight: "28px",
-              padding: "20px",
+              padding: "30px",
+              paddingLeft: "15px",
             }}
           />
         </Box>
