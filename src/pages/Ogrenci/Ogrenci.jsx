@@ -42,7 +42,7 @@ import {
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { getProfile, YeniStaj } from "../../api";
+import { getProfile, kurumKayit, kurumKayitListe, YeniStaj } from "../../api";
 import Header from "../../components/header";
 
 function Ogrenci() {
@@ -50,6 +50,7 @@ function Ogrenci() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [yeniStajState, setYeniStaj] = useState({
     kurum_adi: "",
+    email: "",
     baslangic_tarihi: "",
     bitis_tarihi: "",
     konu: "",
@@ -126,6 +127,8 @@ function Ogrenci() {
 
   const handleSubmit = () => {
     mutate(yeniStajState);
+    kurumKayit(yeniStajState.email, yeniStajState.kurum_adi);
+
     onClose();
   };
 
@@ -163,7 +166,7 @@ function Ogrenci() {
   };
 
   // En güncel stajı bulup state'i güncelleyen useEffect
-  console.log(data);
+
   useEffect(() => {
     if (data && data.length > 0) {
       // Başlangıç tarihlerine göre sıralayarak en yeni stajı bulalım
@@ -267,11 +270,6 @@ function Ogrenci() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const logOut = () => {
-    localStorage.removeItem("token");
-    navigate("/");
-  };
 
   const goToPrevious = () => {
     if (animating) return;
@@ -437,6 +435,14 @@ function Ogrenci() {
                       value={yeniStajState.kurum_adi}
                       onChange={handleInputChange}
                       name="kurum_adi"
+                      mb={3}
+                    />
+                    <label>Kurum Email</label>
+                    <Input
+                      placeholder="Email"
+                      value={yeniStajState.email}
+                      onChange={handleInputChange}
+                      name="email"
                       mb={3}
                     />
                     <label>Başlangıç Tarihi</label>

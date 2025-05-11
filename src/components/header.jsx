@@ -9,6 +9,7 @@ const Header = ({ toggleSidebar }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const logOut = () => {
     localStorage.removeItem("token");
+    localStorage.clear("user");
     navigate("/");
   };
 

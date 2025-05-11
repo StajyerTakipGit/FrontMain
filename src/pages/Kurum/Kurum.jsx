@@ -1,227 +1,157 @@
-import React, { useState, useEffect } from "react";
-import Sidebar from "../../components/sidebar"; // Varsayılan sidebar kullanılıyor
-import Header from "../../components/header"; // Varsayılan header kullanılıyor
-import "./kurum.css"; // Kurum sayfasına özel CSS
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import {
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  Textarea,
+} from "@chakra-ui/react";
+import Sidebar from "../../components/sidebar";
+import Header from "../../components/header";
+import "./kurum.css";
+import { useQuery } from "@tanstack/react-query";
+import { getStajyerler, StajOnay, StajPuanla } from "../../api";
+import { useDisclosure } from "@chakra-ui/react";
+
 import {
   IconButton,
   Box,
-  Button,
   Flex,
+  Text,
   Table,
-  Modal,
   Thead,
   Tbody,
   Tr,
-  Th,
   Td,
-  Text,
-  Badge,
-  Spacer,
-  useDisclosure,
+  Th,
+  Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
-  ModalFooter,
   ModalBody,
+  ModalHeader,
   ModalCloseButton,
-  useToast,
+  ModalFooter,
+  Button,
+  Badge,
 } from "@chakra-ui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBuildingUser,
   faUserCheck,
   faUserClock,
   faUsers,
   faChevronLeft,
   faChevronRight,
-  faCheck,
-  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-
-// API URL sabit değerini tanımlayalım
-const apiUrl = "http://127.0.0.1:8000";
-
-// API fonksiyonlarını güncellenmiş endpointlerle yeniden tanımlama
-const getKurumStajyerleri = async () => {
-  console.log("API: getKurumStajyerleri çağrıldı.");
-
-  try {
-    const response = await axios.get(`${apiUrl}/api/kurum/stajyerler/`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("API Hatası:", error.message);
-    throw error;
-  }
-};
-
-const onaylaStaj = async (stajId) => {
-  try {
-    const response = await axios.patch(
-      `${apiUrl}/api/kurum/stajyerler/${stajId}/`,
-      {
-        kurum_onay: true, // API dokümantasyonuna göre güncelledim
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Onaylama sırasında hata:", error);
-    throw error;
-  }
-};
-
-const reddetStaj = async (stajId) => {
-  try {
-    const response = await axios.post(
-      `${apiUrl}/api/kurum/stajyerler/${stajId}/reddet/`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Reddetme sırasında hata:", error);
-    throw error;
-  }
-};
 
 function Kurum() {
-  const navigate = useNavigate();
-  const toast = useToast();
+  const [selectedStaj, setSelectedStaj] = useState(null);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [approvedCount, setApprovedCount] = useState("Veri yok");
+  const {
+    isOpen: isPuanModalOpen,
+    onOpen: onPuanModalOpen,
+    onClose: onPuanModalClose,
+  } = useDisclosure();
+
+  const [puan, setPuan] = useState("");
+  const [aciklama, setAciklama] = useState("");
+  const handleSavePuan = () => {
+    // StajyerPuanla fonksiyonu içinde gerekli verileri kullan
+    StajPuanla(selectedStaj.id, puan, aciklama);
+    onPuanModalClose();
+  };
   const {
     isOpen: isApproveOpen,
     onOpen: onApproveOpen,
     onClose: onApproveClose,
   } = useDisclosure();
+
   const {
     isOpen: isRejectOpen,
     onOpen: onRejectOpen,
     onClose: onRejectClose,
   } = useDisclosure();
-  const [selectedStaj, setSelectedStaj] = useState(null);
+  const handleApproveClick = (stajyer) => {
+    setSelectedStaj(stajyer);
+    onApproveOpen();
+  };
 
+  const handleRejectClick = (stajyer) => {
+    setSelectedStaj(stajyer);
+    onRejectOpen();
+  };
+
+  const confirmApprove = async () => {
+    try {
+      setIsApproving(true);
+      await StajOnay(selectedStaj.id, true);
+
+      await refetch(); // ✅ Stajyer listesini güncelle
+      onApproveClose(); // ✅ Modalı kapat
+    } catch (err) {
+      console.error("Onaylama hatası:", err);
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const confirmReject = async () => {
+    try {
+      setIsRejecting(true);
+      await StajOnay(selectedStaj.id, false);
+      await refetch(); // ✅ Listeyi güncelle
+      onRejectClose();
+    } catch (err) {
+      console.error("Reddetme hatası:", err);
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [animating, setAnimating] = useState(false);
+  const [visibleCards, setVisibleCards] = useState(3);
   const {
     data: stajyerler,
     isLoading,
     error: fetchError,
     refetch,
   } = useQuery({
-    queryKey: ["kurumStajyerleri"],
-    queryFn: getKurumStajyerleri, // API'den veri çekme
+    queryKey: ["stajyerler"],
+    queryFn: getStajyerler,
   });
-
-  const { mutate: approveMutate, isLoading: isApproving } = useMutation({
-    mutationFn: (stajId) => onaylaStaj(stajId),
-    onSuccess: () => {
-      toast({
-        title: "Başarılı",
-        description: "Staj başvurusu onaylandı.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      refetch();
-      onApproveClose();
-      setSelectedStaj(null);
-    },
-    onError: (err) => {
-      toast({
-        title: "Hata",
-        description: err.message || "Staj onaylanırken bir hata oluştu.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      onApproveClose();
-    },
-  });
-
-  const { mutate: rejectMutate, isLoading: isRejecting } = useMutation({
-    mutationFn: (stajId) => reddetStaj(stajId),
-    onSuccess: () => {
-      toast({
-        title: "Başarılı",
-        description: "Staj başvurusu reddedildi.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      refetch();
-      onRejectClose();
-      setSelectedStaj(null);
-    },
-    onError: (err) => {
-      toast({
-        title: "Hata",
-        description: err.message || "Staj reddedilirken bir hata oluştu.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      onRejectClose();
-    },
-  });
-
-  const handleApproveClick = (staj) => {
-    setSelectedStaj(staj);
-    onApproveOpen();
-  };
-
-  const handleRejectClick = (staj) => {
-    setSelectedStaj(staj);
-    onRejectOpen();
-  };
-
-  const confirmApprove = () => {
-    if (selectedStaj) {
-      approveMutate(selectedStaj.id);
+  useEffect(() => {
+    if (stajyerler && Array.isArray(stajyerler)) {
+      const count = stajyerler.filter(
+        (stajyer) => stajyer.kurum_onaylandi === true
+      ).length;
+      setApprovedCount(count);
     }
-  };
-
-  const confirmReject = () => {
-    if (selectedStaj) {
-      rejectMutate(selectedStaj.id);
-    }
-  };
+  }, [stajyerler]);
 
   const cards = [
     {
       title: "Aktif Stajyerler",
-      value: stajyerler?.filter((s) => s.durum === "Onaylandı").length || 0,
+      value: approvedCount,
       subtitle: "Şu anda staj yapan öğrenci sayısı",
       icon: faUserCheck,
     },
     {
       title: "Bekleyen Başvurular",
-      value: stajyerler?.filter((s) => s.durum === "Beklemede").length || 0,
+      value:
+        stajyerler?.filter((stajyer) => !stajyer.kurum_onaylandi)?.length ?? 0,
       subtitle: "Onayınızı bekleyen staj başvuruları",
       icon: faUserClock,
     },
     {
       title: "Toplam Stajyer",
-      value: stajyerler?.length || 0,
+      value: stajyerler?.length ?? 0,
       subtitle: "Bugüne kadar staj yapan/yapacak öğrenci",
       icon: faUsers,
     },
   ];
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [animating, setAnimating] = useState(false);
-  const [visibleCards, setVisibleCards] = useState(3);
 
   useEffect(() => {
     const handleResize = () => {
@@ -253,11 +183,6 @@ function Kurum() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-
-  const logOut = () => {
-    localStorage.removeItem("token");
-    navigate("/kurum-login");
-  };
 
   return (
     <>
@@ -346,62 +271,97 @@ function Kurum() {
             <Table variant="simple" width="100%">
               <Thead>
                 <Tr>
-                  <Th>Stajyer Adı</Th>
-                  <Th>Başvuru Durumu</Th>
-                  <Th>Başvuru Tarihi</Th>
-                  <Th>İşlemler</Th>
+                  {stajyerler?.some((s) => s.kurum_onaylandi) ? (
+                    <>
+                      <Th>Stajyer Adı</Th>
+                      <Th>Başlangıç Tarihi</Th>
+                      <Th>Bitiş Tarihi</Th>
+                      <Th>Konu</Th>
+                      <Th>Kurum Puanı</Th>
+                      <Th>İşlemler</Th>
+                    </>
+                  ) : (
+                    <>
+                      <Th>Stajyer Adı</Th>
+                      <Th>Başvuru Durumu</Th>
+                      <Th>Başvuru Tarihi</Th>
+                      <Th>İşlemler</Th>
+                    </>
+                  )}
                 </Tr>
               </Thead>
               <Tbody>
                 {isLoading ? (
                   <Tr>
-                    <Td colSpan="4" textAlign="center">
+                    <Td colSpan="6" textAlign="center">
                       Yükleniyor...
                     </Td>
                   </Tr>
                 ) : fetchError ? (
                   <Tr>
-                    <Td colSpan="4" textAlign="center">
+                    <Td colSpan="6" textAlign="center">
                       Hata oluştu. Lütfen tekrar deneyin.
                     </Td>
                   </Tr>
                 ) : (
                   stajyerler?.map((stajyer) => (
                     <Tr key={stajyer.id}>
-                      <Td>{stajyer.ad}</Td>
-                      <Td>
-                        <Badge
-                          colorScheme={
-                            stajyer.durum === "Onaylandı"
-                              ? "green"
-                              : stajyer.durum === "Beklemede"
-                              ? "yellow"
-                              : "red"
-                          }
-                        >
-                          {stajyer.durum}
-                        </Badge>
-                      </Td>
-                      <Td>{stajyer.tarih}</Td>
-                      <Td>
-                        <Button
-                          colorScheme="blue"
-                          onClick={() => handleApproveClick(stajyer)}
-                          isLoading={isApproving}
-                          isDisabled={stajyer.durum === "Onaylandı"}
-                        >
-                          Onayla
-                        </Button>
-                        <Button
-                          colorScheme="red"
-                          onClick={() => handleRejectClick(stajyer)}
-                          isLoading={isRejecting}
-                          ml={2}
-                          isDisabled={stajyer.durum === "Reddedildi"}
-                        >
-                          Reddet
-                        </Button>
-                      </Td>
+                      {stajyer.durum === "Tamamlandı" ? (
+                        <>
+                          <Td>{`${stajyer.ogrenci.isim} ${stajyer.ogrenci.soyisim}`}</Td>
+                          <Td>{stajyer.baslangic_tarihi}</Td>
+                          <Td>{stajyer.bitis_tarihi}</Td>
+                          <Td>{stajyer.konu || "—"}</Td>
+                          <Td>{stajyer.kurum_puani ?? "Henüz verilmedi"}</Td>
+                          <Td>
+                            <Button
+                              colorScheme="teal"
+                              onClick={() => {
+                                setSelectedStaj(stajyer);
+                                onPuanModalOpen();
+                              }}
+                            >
+                              Puanla
+                            </Button>
+                          </Td>
+                        </>
+                      ) : (
+                        <>
+                          <Td>{`${stajyer.ogrenci.isim} ${stajyer.ogrenci.soyisim}`}</Td>
+                          <Td>
+                            <Badge
+                              colorScheme={
+                                stajyer.durum === "Tamamlandı"
+                                  ? "green"
+                                  : stajyer.durum === "Tamamlanmadı"
+                                  ? "red "
+                                  : "yellow"
+                              }
+                            >
+                              {stajyer.durum}
+                            </Badge>
+                          </Td>
+
+                          <Td>
+                            <Button
+                              colorScheme="blue"
+                              onClick={() => handleApproveClick(stajyer)}
+                              isLoading={isApproving}
+                              isDisabled={stajyer.kurum_onaylandi}
+                            >
+                              Onayla
+                            </Button>
+                            <Button
+                              colorScheme="red"
+                              onClick={() => handleRejectClick(stajyer)}
+                              isLoading={isRejecting}
+                              ml={2}
+                            >
+                              Reddet
+                            </Button>
+                          </Td>
+                        </>
+                      )}
                     </Tr>
                   ))
                 )}
@@ -420,8 +380,9 @@ function Kurum() {
           <ModalBody>
             {selectedStaj && (
               <Text>
-                {selectedStaj.ad} isimli öğrencinin staj başvurusunu onaylamak
-                istediğinize emin misiniz?
+                {`${selectedStaj.ogrenci.isim} ${selectedStaj.ogrenci.soyisim}`}{" "}
+                isimli öğrencinin staj başvurusunu onaylamak istediğinize emin
+                misiniz?
               </Text>
             )}
           </ModalBody>
@@ -435,7 +396,40 @@ function Kurum() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      <Modal isOpen={isPuanModalOpen} onClose={onPuanModalClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Stajyer Puanla</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={4}>
+            <FormControl mb={4}>
+              <FormLabel>Puan</FormLabel>
+              <Input
+                placeholder="Puan giriniz.."
+                value={puan}
+                onChange={(e) => setPuan(e.target.value)}
+              ></Input>
+            </FormControl>
 
+            <FormControl>
+              <FormLabel>Açıklama</FormLabel>
+              <Textarea
+                placeholder="Açıklama girin..."
+                rows={5}
+                value={aciklama}
+                onChange={(e) => setAciklama(e.target.value)}
+              />
+            </FormControl>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={handleSavePuan}>
+              Kaydet
+            </Button>
+            <Button onClick={onPuanModalClose}>İptal</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       {/* Reddetme Modal */}
       <Modal isOpen={isRejectOpen} onClose={onRejectClose}>
         <ModalOverlay />
