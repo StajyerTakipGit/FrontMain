@@ -9,11 +9,9 @@ export const fetchlogin = async (userData) => {
       email: userData.email,
       password: userData.password,
     });
-
     if (response.data && response.data.token) {
       localStorage.setItem("token", response.data.token);
     }
-
     return response.data;
   } catch (error) {
     console.error("Giriş sırasında bir hata oluştu:", error);
@@ -387,4 +385,94 @@ export const kurumKayitListe = () => {
         toast.error("Bir hata oluştu.");
       }
     });
+};
+///////// ADMIN APİLERİ /////////
+export const onayliStajlar = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast({
+        title: "Hata",
+        description: "Giriş yapmanız gerekiyor.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    const response = await axios.get(`${apiUrl}/api/admin/stajlar/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Hata oluştu:", error.response?.data || error.message);
+    throw error;
+  }
+};
+export const adminOnay = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast({
+        title: "Hata",
+        description: "Giriş yapmanız gerekiyor.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    const response = await axios.patch(
+      `${apiUrl}/api/admin/stajlar/${id}/`,
+      { kurum_onaylandi: true },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Hata oluştu:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getFiltreliStajlar = async (filters) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Token bulunamadı. Lütfen giriş yapınız.");
+    }
+
+    // Filtre parametrelerini oluştur
+    const queryParams = new URLSearchParams();
+    if (filters.durum) queryParams.append("durum", filters.durum);
+    if (filters.konu) queryParams.append("konu", filters.konu);
+    if (filters.ogrenci_adi)
+      queryParams.append("ogrenci__isim", filters.ogrenci_adi);
+    if (filters.baslangic_tarihi)
+      queryParams.append("baslangic_tarihi", filters.baslangic_tarihi);
+
+    // Eğer hiç filtre yoksa, normal stajlar endpoint'ini kullan
+    const endpoint = queryParams.toString()
+      ? `${apiUrl}/api/admin/stajlar/filtreli/?${queryParams.toString()}`
+      : `${apiUrl}/api/admin/stajlar/`;
+
+    const response = await axios.get(endpoint, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Staj listesi alınırken hata oluştu:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
 };

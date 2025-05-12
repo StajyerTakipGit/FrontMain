@@ -10,11 +10,16 @@ import {
   FiX,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { kurumKayitListe } from "../../api";
+import {
+  kurumKayitListe,
+  onayliStajlar,
+  adminOnay,
+  getFiltreliStajlar,
+} from "../../api";
 import { useNavigate } from "react-router-dom";
+
 const Admin = () => {
   const navigate = useNavigate();
-  // Dummy veri kullanımı
   const [stajyerler, setStajyerler] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -27,73 +32,59 @@ const Admin = () => {
   const [user, setUser] = useState({ name: "Admin Kullanıcı" });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [onayliStajlarListesi, setOnayliStajlarListesi] = useState([]);
 
-  // Dummy data yükleme simulasyonu
+  // İlk yükleme için useEffect
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        setLoading(true);
+        const data = await getFiltreliStajlar({});
+        setStajyerler(data);
+      } catch (error) {
+        console.error("Stajlar alınırken hata:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+
+  // Filtreleme işlemi için useEffect
+  useEffect(() => {
+    const fetchFiltreliStajlar = async () => {
+      // Eğer hiç filtre yoksa, API çağrısı yapma
+      if (
+        !filters.durum &&
+        !filters.konu &&
+        !filters.ogrenci_adi &&
+        !filters.baslangic_tarihi
+      ) {
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await getFiltreliStajlar(filters);
+        setStajyerler(data);
+      } catch (error) {
+        console.error("Filtreli stajlar alınırken hata:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFiltreliStajlar();
+  }, [filters]);
+
   useEffect(() => {
     kurumKayitListe();
-    // Simüle edilmiş kullanıcı
     setUser({ name: "Admin Kullanıcı" });
-
-    // Simüle edilmiş bildirimler
     setNotifications([
       { id: 1, message: "3 yeni başvuru bekliyor", read: false },
       { id: 2, message: "Sistem güncellemesi yapıldı", read: true },
     ]);
-
-    // Simüle edilmiş veri yükleme
-    const dummyData = [
-      {
-        id: 1,
-        ogrenci_adi: "Ahmet Yılmaz",
-        okul_adi: "İstanbul Teknik Üniversitesi",
-        konu: "Web Geliştirme",
-        baslangic_tarihi: "2025-06-01",
-        bitis_tarihi: "2025-07-30",
-        durum: "Beklemede",
-      },
-      {
-        id: 2,
-        ogrenci_adi: "Ayşe Demir",
-        okul_adi: "Boğaziçi Üniversitesi",
-        konu: "Mobil Uygulama Geliştirme",
-        baslangic_tarihi: "2025-06-15",
-        bitis_tarihi: "2025-08-15",
-        durum: "Onaylandı",
-      },
-      {
-        id: 3,
-        ogrenci_adi: "Mehmet Kaya",
-        okul_adi: "Yıldız Teknik Üniversitesi",
-        konu: "Siber Güvenlik",
-        baslangic_tarihi: "2025-07-01",
-        bitis_tarihi: "2025-08-30",
-        durum: "Reddedildi",
-      },
-      {
-        id: 4,
-        ogrenci_adi: "Zeynep Öztürk",
-        okul_adi: "Orta Doğu Teknik Üniversitesi",
-        konu: "Veri Bilimi",
-        baslangic_tarihi: "2025-06-20",
-        bitis_tarihi: "2025-09-10",
-        durum: "Beklemede",
-      },
-      {
-        id: 5,
-        ogrenci_adi: "Emre Koç",
-        okul_adi: "Hacettepe Üniversitesi",
-        konu: "Yapay Zeka",
-        baslangic_tarihi: "2025-07-15",
-        bitis_tarihi: "2025-09-15",
-        durum: "Onaylandı",
-      },
-    ];
-
-    // Yükleme simulasyonu için timeout
-    setTimeout(() => {
-      setStajyerler(dummyData);
-      setLoading(false);
-    }, 1000);
   }, []);
 
   const handleLogout = () => {
@@ -104,6 +95,9 @@ const Admin = () => {
   };
 
   const handleOnayla = (stajId) => {
+    adminOnay(stajId).then((data) => {
+      console.log(data);
+    });
     // Dummy onaylama işlemi
     const updatedStajyerler = stajyerler.map((staj) =>
       staj.id === stajId ? { ...staj, durum: "Onaylandı" } : staj
@@ -127,30 +121,16 @@ const Admin = () => {
     }));
   };
 
-  const filteredStajyerler = stajyerler.filter((staj) => {
-    return (
-      (filters.durum === "" || staj.durum === filters.durum) &&
-      (filters.konu === "" ||
-        staj.konu.toLowerCase().includes(filters.konu.toLowerCase())) &&
-      (filters.ogrenci_adi === "" ||
-        staj.ogrenci_adi
-          .toLowerCase()
-          .includes(filters.ogrenci_adi.toLowerCase())) &&
-      (filters.baslangic_tarihi === "" ||
-        staj.baslangic_tarihi === filters.baslangic_tarihi)
-    );
-  });
-
   const getFilteredByTab = () => {
     switch (activeTab) {
       case "onayli":
-        return filteredStajyerler.filter((staj) => staj.durum === "Onaylandı");
+        return onayliStajlarListesi;
       case "bekleyen":
-        return filteredStajyerler.filter((staj) => staj.durum === "Beklemede");
+        return stajyerler.filter((staj) => staj.durum === "Beklemede");
       case "reddedilen":
-        return filteredStajyerler.filter((staj) => staj.durum === "Reddedildi");
+        return stajyerler.filter((staj) => staj.durum === "Reddedildi");
       default:
-        return filteredStajyerler;
+        return stajyerler;
     }
   };
 
