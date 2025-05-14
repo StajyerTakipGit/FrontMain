@@ -343,6 +343,7 @@ export const kurumKayit = (email, isim) => {
       }
     });
 };
+
 export const kurumKayitListe = () => {
   const token = localStorage.getItem("token");
   console.log("token çekildi");
@@ -386,6 +387,7 @@ export const kurumKayitListe = () => {
       }
     });
 };
+
 ///////// ADMIN APİLERİ /////////
 export const onayliStajlar = async () => {
   try {
@@ -426,7 +428,36 @@ export const adminOnay = async (id) => {
     }
     const response = await axios.patch(
       `${apiUrl}/api/admin/stajlar/${id}/`,
-      { kurum_onaylandi: true },
+      { admin_onaylandi: true },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Hata oluştu:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const adminRed = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast({
+        title: "Hata",
+        description: "Giriş yapmanız gerekiyor.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    const response = await axios.patch(
+      `${apiUrl}/api/admin/stajlar/${id}/`,
+      { admin_onaylandi: false, kurum_onaylandi: false },
       {
         headers: {
           Authorization: `Bearer ${token}`,

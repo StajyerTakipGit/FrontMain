@@ -54,7 +54,13 @@ function Kurum() {
     onOpen: onPuanModalOpen,
     onClose: onPuanModalClose,
   } = useDisclosure();
-
+  const getTodayDate = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
   const [puan, setPuan] = useState("");
   const [aciklama, setAciklama] = useState("");
   const handleSavePuan = () => {
@@ -125,7 +131,7 @@ function Kurum() {
   useEffect(() => {
     if (stajyerler && Array.isArray(stajyerler)) {
       const count = stajyerler.filter(
-        (stajyer) => stajyer.kurum_onaylandi === true
+        (stajyer) => stajyer.durum === "Aktif"
       ).length;
       setApprovedCount(count);
     }
@@ -141,13 +147,16 @@ function Kurum() {
     {
       title: "Bekleyen Başvurular",
       value:
-        stajyerler?.filter((stajyer) => !stajyer.kurum_onaylandi)?.length ?? 0,
+        stajyerler?.filter((stajyer) => stajyer.durum === "Beklemede")
+          ?.length ?? 0,
       subtitle: "Onayınızı bekleyen staj başvuruları",
       icon: faUserClock,
     },
     {
       title: "Toplam Stajyer",
-      value: stajyerler?.length ?? 0,
+      value:
+        stajyerler?.filter((stajyer) => !(stajyer.durum === "Reddedildi"))
+          ?.length ?? 0,
       subtitle: "Bugüne kadar staj yapan/yapacak öğrenci",
       icon: faUsers,
     },
@@ -271,7 +280,7 @@ function Kurum() {
             <Table variant="simple" width="100%">
               <Thead>
                 <Tr>
-                  {stajyerler?.some((s) => s.kurum_onaylandi) ? (
+                  {stajyerler?.some((s) => s.durum === "Aktif") ? (
                     <>
                       <Th>Stajyer Adı</Th>
                       <Th>Başlangıç Tarihi</Th>
@@ -283,8 +292,9 @@ function Kurum() {
                   ) : (
                     <>
                       <Th>Stajyer Adı</Th>
-                      <Th>Başvuru Durumu</Th>
                       <Th>Başvuru Tarihi</Th>
+                      <Th>Başvuru Durumu</Th>
+                      <Th>Konu</Th>
                       <Th>İşlemler</Th>
                     </>
                   )}
@@ -306,7 +316,7 @@ function Kurum() {
                 ) : (
                   stajyerler?.map((stajyer) => (
                     <Tr key={stajyer.id}>
-                      {stajyer.durum === "Tamamlandı" ? (
+                      {stajyer.durum === "Aktif" ? (
                         <>
                           <Td>{`${stajyer.ogrenci.isim} ${stajyer.ogrenci.soyisim}`}</Td>
                           <Td>{stajyer.baslangic_tarihi}</Td>
@@ -328,13 +338,16 @@ function Kurum() {
                       ) : (
                         <>
                           <Td>{`${stajyer.ogrenci.isim} ${stajyer.ogrenci.soyisim}`}</Td>
+                          <Td>{getTodayDate()}</Td>
                           <Td>
                             <Badge
                               colorScheme={
-                                stajyer.durum === "Tamamlandı"
+                                stajyer.durum === "Kurum Onayladı"
+                                  ? "blue"
+                                  : stajyer.durum === "Reddedildi"
+                                  ? "red"
+                                  : stajyer.durum === "Aktif"
                                   ? "green"
-                                  : stajyer.durum === "Tamamlanmadı"
-                                  ? "red "
                                   : "yellow"
                               }
                             >
@@ -342,23 +355,31 @@ function Kurum() {
                             </Badge>
                           </Td>
 
+                          <Td>{stajyer.konu || "—"}</Td>
                           <Td>
-                            <Button
-                              colorScheme="blue"
-                              onClick={() => handleApproveClick(stajyer)}
-                              isLoading={isApproving}
-                              isDisabled={stajyer.kurum_onaylandi}
-                            >
-                              Onayla
-                            </Button>
-                            <Button
-                              colorScheme="red"
-                              onClick={() => handleRejectClick(stajyer)}
-                              isLoading={isRejecting}
-                              ml={2}
-                            >
-                              Reddet
-                            </Button>
+                            {stajyer.durum === "Reddedildi" ? (
+                              // "Reddedildi" durumunda butonları gösterme
+                              <Text color="gray.500">Başvuru Reddedildi</Text>
+                            ) : (
+                              <>
+                                <Button
+                                  colorScheme="blue"
+                                  onClick={() => handleApproveClick(stajyer)}
+                                  isLoading={isApproving}
+                                  isDisabled={stajyer.kurum_onaylandi}
+                                >
+                                  Onayla
+                                </Button>
+                                <Button
+                                  colorScheme="red"
+                                  onClick={() => handleRejectClick(stajyer)}
+                                  isLoading={isRejecting}
+                                  ml={2}
+                                >
+                                  Reddet
+                                </Button>
+                              </>
+                            )}
                           </Td>
                         </>
                       )}

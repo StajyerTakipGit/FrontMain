@@ -15,6 +15,7 @@ import {
   onayliStajlar,
   adminOnay,
   getFiltreliStajlar,
+  adminRed,
 } from "../../api";
 import { useNavigate } from "react-router-dom";
 
@@ -94,23 +95,24 @@ const Admin = () => {
     navigate("/");
   };
 
-  const handleOnayla = (stajId) => {
-    adminOnay(stajId).then((data) => {
-      console.log(data);
-    });
-    // Dummy onaylama işlemi
-    const updatedStajyerler = stajyerler.map((staj) =>
-      staj.id === stajId ? { ...staj, durum: "Onaylandı" } : staj
-    );
-    setStajyerler(updatedStajyerler);
+  const handleOnayla = async (stajId) => {
+    try {
+      await adminOnay(stajId);
+      const updatedData = await getFiltreliStajlar(filters);
+      setStajyerler(updatedData);
+    } catch (error) {
+      console.error("Onaylama hatası:", error);
+    }
   };
 
-  const handleReddet = (stajId) => {
-    // Dummy reddetme işlemi
-    const updatedStajyerler = stajyerler.map((staj) =>
-      staj.id === stajId ? { ...staj, durum: "Reddedildi" } : staj
-    );
-    setStajyerler(updatedStajyerler);
+  const handleReddet = async (stajId) => {
+    try {
+      await adminRed(stajId);
+      const updatedData = await getFiltreliStajlar(filters);
+      setStajyerler(updatedData);
+    } catch (error) {
+      console.error("Reddetme hatası:", error);
+    }
   };
 
   const handleFilterChange = (e) => {
@@ -130,7 +132,9 @@ const Admin = () => {
       case "reddedilen":
         return stajyerler.filter((staj) => staj.durum === "Reddedildi");
       default:
-        return stajyerler;
+        return stajyerler.filter(
+          (staj) => staj.durum === "Aktif" || staj.durum === "Kurum Onayladı"
+        );
     }
   };
 
@@ -390,7 +394,7 @@ const Admin = () => {
                           </td>
                           <td data-label="Durum">{durumBadge(staj.durum)}</td>
                           <td data-label="İşlemler" className="actions">
-                            {staj.durum === "Beklemede" && (
+                            {staj.durum === "Kurum Onayladı" && (
                               <div className="action-buttons">
                                 <button
                                   className="btn-approve"
