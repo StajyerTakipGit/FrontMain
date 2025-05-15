@@ -71,7 +71,7 @@ function Ogrenci() {
   ];
   const currentMonth = new Date().getMonth(); // 0-index
   const currentMonthName = turkishMonths[currentMonth];
-
+  const [Adderror, SetError] = useState("");
   // Kartlar için mevcut staj bilgilerini tutacak state
   const [currentStaj, setCurrentStaj] = useState({
     staj_no: "-",
@@ -109,27 +109,26 @@ function Ogrenci() {
   };
 
   // Fixed useMutation implementation
-  const {
-    mutate,
-    isLoading: isSubmitting,
-    isError,
-    error,
-  } = useMutation({
+  const { mutate, isError, error, isSubmitting } = useMutation({
     mutationFn: (data) => YeniStaj(data),
     onSuccess: (data) => {
-      console.log("Staj başarıyla eklendi:", data);
-      refetch(); // Refresh the data after adding a new internship
+      refetch();
+      onClose(); // Başarılı olunca modalı kapat
+      SetError(""); // Hata mesajını temizle
     },
     onError: (err) => {
-      console.error("Bir hata oluştu:", err);
+      // Backend'in döndüğü hataya göre ayarlayın
+      SetError(
+        err.response?.data?.message ||
+          err.response?.data?.[0] ||
+          "Bir hata oluştu"
+      );
     },
   });
 
   const handleSubmit = () => {
     mutate(yeniStajState);
-    kurumKayit(yeniStajState.email, yeniStajState.kurum_adi);
-
-    onClose();
+    // onClose() buradan kaldırıldı
   };
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -138,6 +137,7 @@ function Ogrenci() {
   const {
     data,
     isLoading,
+
     error: profileError,
     refetch,
   } = useQuery({
@@ -420,7 +420,13 @@ function Ogrenci() {
                 Stajlarım
               </Text>
               <Spacer />
-              <Button colorScheme="green" onClick={onOpen}>
+              <Button
+                colorScheme="green"
+                onClick={() => {
+                  SetError(""); // Modal açılırken hata mesajını temizle
+                  onOpen();
+                }}
+              >
                 + Yeni Staj Başvurusu
               </Button>
               <Modal isOpen={isOpen} onClose={onClose} isCentered>
@@ -471,6 +477,11 @@ function Ogrenci() {
                       name="konu"
                       mb={3}
                     />
+                    {Adderror && (
+                      <Text color="red.500" mb={3}>
+                        {Adderror}
+                      </Text>
+                    )}
                   </ModalBody>
 
                   <ModalFooter>
