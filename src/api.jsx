@@ -487,6 +487,7 @@ export const getFiltreliStajlar = async (filters) => {
     if (filters.baslangic_tarihi)
       queryParams.append("baslangic_tarihi", filters.baslangic_tarihi);
 
+    console.log(queryParams.toString());
     // Eğer hiç filtre yoksa, normal stajlar endpoint'ini kullan
     const endpoint = queryParams.toString()
       ? `${apiUrl}/api/admin/stajlar/filtreli/?${queryParams.toString()}`

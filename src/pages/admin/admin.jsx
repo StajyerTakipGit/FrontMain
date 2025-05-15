@@ -41,6 +41,9 @@ const Admin = () => {
       try {
         setLoading(true);
         const data = await getFiltreliStajlar({});
+        setOnayliStajlarListesi((data) => {
+          return data.filter((staj) => staj.durum === "Onaylandı");
+        });
         setStajyerler(data);
       } catch (error) {
         console.error("Stajlar alınırken hata:", error);
@@ -55,19 +58,15 @@ const Admin = () => {
   // Filtreleme işlemi için useEffect
   useEffect(() => {
     const fetchFiltreliStajlar = async () => {
-      // Eğer hiç filtre yoksa, API çağrısı yapma
-      if (
-        !filters.durum &&
-        !filters.konu &&
-        !filters.ogrenci_adi &&
-        !filters.baslangic_tarihi
-      ) {
-        return;
-      }
+      // Eğer hiç filtre yoksa, API çağrısı yapma !! API çağrısı yapılmazsa default veriler kaybolur !!
 
       try {
         setLoading(true);
         const data = await getFiltreliStajlar(filters);
+        setOnayliStajlarListesi((data) => {
+          console.log(data);
+          return data.filter((staj) => staj.durum === "Onaylandı");
+        });
         setStajyerler(data);
       } catch (error) {
         console.error("Filtreli stajlar alınırken hata:", error);
@@ -132,9 +131,7 @@ const Admin = () => {
       case "reddedilen":
         return stajyerler.filter((staj) => staj.durum === "Reddedildi");
       default:
-        return stajyerler.filter(
-          (staj) => staj.durum === "Aktif" || staj.durum === "Kurum Onayladı"
-        );
+        return stajyerler;
     }
   };
 
@@ -373,6 +370,7 @@ const Admin = () => {
                       <tr>
                         <th>Öğrenci Adı</th>
                         <th>Okul</th>
+                        <th>Şirket</th>
                         <th>Konu</th>
                         <th>Başlangıç Tarihi</th>
                         <th>Bitiş Tarihi</th>
@@ -383,8 +381,11 @@ const Admin = () => {
                     <tbody>
                       {getFilteredByTab().map((staj) => (
                         <tr key={staj.id}>
-                          <td data-label="Öğrenci Adı">{staj.ogrenci_adi}</td>
+                          <td data-label="Öğrenci Adı">
+                            {staj.ogrenci.isim} {staj.ogrenci.soyisim}
+                          </td>
                           <td data-label="Okul">{staj.okul_adi}</td>
+                          <td data-label="Şirket">{staj.kurum_adi}</td>
                           <td data-label="Konu">{staj.konu}</td>
                           <td data-label="Başlangıç">
                             {formatDate(staj.baslangic_tarihi)}
