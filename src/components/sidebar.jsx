@@ -23,14 +23,6 @@ function Sidebar({ userType = "ogrenci" }) {
             <span style={{ marginLeft: "15px" }}>Anasayfa</span>
           </a>
         </li>
-        <li className={styles.list_item} style={{ paddingLeft: "17px" }}>
-          <a href="/kurum">
-            <span>
-              <FontAwesomeIcon icon={faUsers} size="xl" />
-            </span>
-            <span style={{ marginLeft: "15px" }}>Stajyerler</span>
-          </a>
-        </li>
       </>
     ) : (
       <>

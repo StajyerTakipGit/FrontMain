@@ -42,7 +42,13 @@ import {
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { getProfile, kurumKayit, kurumKayitListe, YeniStaj } from "../../api";
+import {
+  getProfile,
+  kurumKayit,
+  kurumKayitListe,
+  YeniStaj,
+  getDefter,
+} from "../../api";
 import Header from "../../components/header";
 
 function Ogrenci() {
@@ -82,6 +88,9 @@ function Ogrenci() {
     tamamlanan_gun: 0,
     kalan_gun: 0,
   });
+
+  const [defterSayisi, setDefterSayisi] = useState(0);
+  const [PuantajSayisi, setPuantajSayisi] = useState(0);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -137,7 +146,6 @@ function Ogrenci() {
   const {
     data,
     isLoading,
-
     error: profileError,
     refetch,
   } = useQuery({
@@ -166,7 +174,6 @@ function Ogrenci() {
   };
 
   // En güncel stajı bulup state'i güncelleyen useEffect
-
   useEffect(() => {
     if (data && data.length > 0) {
       // Başlangıç tarihlerine göre sıralayarak en yeni stajı bulalım
@@ -198,20 +205,43 @@ function Ogrenci() {
       });
     }
   }, [data]);
-  const [defterSayisi, setDefterSayisi] = useState(0);
-  const [PuantajSayisi, setPuantajSayisi] = useState(0);
+
+  // Staj günlük ve puantaj verilerini çekme useEffect
   useEffect(() => {
-    const storedData = JSON.parse(localStorage.getItem("data")) || [];
-    const filtered = storedData.filter(
-      (item) => item.staj_no === currentStaj.staj_no
-    );
+    // Sadece geçerli bir staj_no varsa API çağrısı yapalım
+    if (currentStaj.staj_no && currentStaj.staj_no !== "-") {
+      // Günlük defteri verilerini çek
+      getDefter(currentStaj.staj_no)
+        .then((entries) => {
+          // Mevcut ayın verilerini filtrele
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, "0");
+          const currentMonthPrefix = `${year}-${month}`;
 
-    const defterler = filtered.filter((item) => item.diary);
-    const puantajlar = filtered.filter((item) => item.status);
+          // Bu ay içindeki günlük sayısı
+          const currentMonthEntries = entries.filter((entry) =>
+            entry.gun_no.startsWith(currentMonthPrefix)
+          );
+          console.log(currentMonthEntries);
+          setDefterSayisi(currentMonthEntries.length);
 
-    setDefterSayisi(defterler.length);
-    setPuantajSayisi(puantajlar.length);
+          // Bu ay içindeki puantaj sayısı
+          const currentMonthPuantaj = entries.filter(
+            (entry) =>
+              entry.gun_no.startsWith(currentMonthPrefix) && entry.status
+          );
+          setPuantajSayisi(currentMonthEntries.length);
+        })
+        .catch((error) => {
+          console.error("Günlük verileri yüklenirken hata:", error);
+          // Hata durumunda varsayılan değerler
+          setDefterSayisi(0);
+          setPuantajSayisi(0);
+        });
+    }
   }, [currentStaj.staj_no]);
+
   // Dinamik kartlar
   const cards = [
     {
@@ -469,9 +499,9 @@ function Ogrenci() {
                       name="bitis_tarihi"
                       mb={3}
                     />
-                    <label>Konu</label>
+                    <label>Departman</label>
                     <Input
-                      placeholder="Konu"
+                      placeholder="Departman"
                       value={yeniStajState.konu}
                       onChange={handleInputChange}
                       name="konu"

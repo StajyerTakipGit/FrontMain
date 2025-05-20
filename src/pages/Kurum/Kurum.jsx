@@ -13,7 +13,7 @@ import "./kurum.css";
 import { useQuery } from "@tanstack/react-query";
 import { getStajyerler, StajOnay, StajPuanla } from "../../api";
 import { useDisclosure } from "@chakra-ui/react";
-
+import { useNavigate } from "react-router-dom";
 import {
   IconButton,
   Box,
@@ -45,6 +45,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 function Kurum() {
+  const navigate = useNavigate();
   const [selectedStaj, setSelectedStaj] = useState(null);
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
@@ -54,20 +55,14 @@ function Kurum() {
     onOpen: onPuanModalOpen,
     onClose: onPuanModalClose,
   } = useDisclosure();
-  const getTodayDate = () => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  };
   const [puan, setPuan] = useState("");
   const [aciklama, setAciklama] = useState("");
+
   const handleSavePuan = () => {
-    // StajyerPuanla fonksiyonu içinde gerekli verileri kullan
     StajPuanla(selectedStaj.id, puan, aciklama);
     onPuanModalClose();
   };
+
   const {
     isOpen: isApproveOpen,
     onOpen: onApproveOpen,
@@ -79,6 +74,7 @@ function Kurum() {
     onOpen: onRejectOpen,
     onClose: onRejectClose,
   } = useDisclosure();
+
   const handleApproveClick = (stajyer) => {
     setSelectedStaj(stajyer);
     onApproveOpen();
@@ -93,9 +89,8 @@ function Kurum() {
     try {
       setIsApproving(true);
       await StajOnay(selectedStaj.id, true);
-
-      await refetch(); // ✅ Stajyer listesini güncelle
-      onApproveClose(); // ✅ Modalı kapat
+      await refetch();
+      onApproveClose();
     } catch (err) {
       console.error("Onaylama hatası:", err);
     } finally {
@@ -107,7 +102,7 @@ function Kurum() {
     try {
       setIsRejecting(true);
       await StajOnay(selectedStaj.id, false);
-      await refetch(); // ✅ Listeyi güncelle
+      await refetch();
       onRejectClose();
     } catch (err) {
       console.error("Reddetme hatası:", err);
@@ -119,6 +114,14 @@ function Kurum() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [visibleCards, setVisibleCards] = useState(3);
+
+  const [silinenStajyerler, setSilinenStajyerler] = useState([]);
+  const handleGizle = (id) => {
+    const updated = [...silinenStajyerler, id];
+    setSilinenStajyerler(updated);
+    localStorage.setItem("silinenStajyerler", JSON.stringify(updated));
+  };
+
   const {
     data: stajyerler,
     isLoading,
@@ -128,6 +131,16 @@ function Kurum() {
     queryKey: ["stajyerler"],
     queryFn: getStajyerler,
   });
+  useEffect(() => {
+    const stored = localStorage.getItem("silinenStajyerler");
+    if (stored) {
+      setSilinenStajyerler(JSON.parse(stored));
+    }
+  }, []);
+  const handleResetSilinenler = () => {
+    setSilinenStajyerler([]);
+    localStorage.removeItem("silinenStajyerler");
+  };
   useEffect(() => {
     if (stajyerler && Array.isArray(stajyerler)) {
       const count = stajyerler.filter(
@@ -192,6 +205,26 @@ function Kurum() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const getTodayDate = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const getBgColor = (durum) => {
+    switch (durum) {
+      case "Aktif":
+        return "#B0E0E6";
+      case "Beklemede":
+        return "#E6E0B0";
+      case "Reddedildi":
+        return "#E6B0B0";
+      default:
+        return "transparent";
+    }
+  };
 
   return (
     <>
@@ -274,30 +307,35 @@ function Kurum() {
                 />
               )}
             </Flex>
+            <Button
+              bg={"green"}
+              color={"white"}
+              onClick={handleResetSilinenler}
+            >
+              Gizlenenleri Göster
+            </Button>
           </div>
 
           <div className="kurum-stajyer">
             <Table variant="simple" width="100%">
               <Thead>
                 <Tr>
-                  {stajyerler?.some((s) => s.durum === "Aktif") ? (
-                    <>
-                      <Th>Stajyer Adı</Th>
-                      <Th>Başlangıç Tarihi</Th>
-                      <Th>Bitiş Tarihi</Th>
-                      <Th>Konu</Th>
-                      <Th>Kurum Puanı</Th>
-                      <Th>İşlemler</Th>
-                    </>
-                  ) : (
-                    <>
-                      <Th>Stajyer Adı</Th>
-                      <Th>Başvuru Tarihi</Th>
-                      <Th>Başvuru Durumu</Th>
-                      <Th>Konu</Th>
-                      <Th>İşlemler</Th>
-                    </>
+                  <Th>Stajyer Adı</Th>
+                  <Th>
+                    {stajyerler?.some((s) => s.durum === "Aktif")
+                      ? "Başlangıç Tarihi"
+                      : "Başvuru Tarihi"}
+                  </Th>
+                  <Th>
+                    {stajyerler?.some((s) => s.durum === "Aktif")
+                      ? "Bitiş Tarihi"
+                      : "Başvuru Durumu"}
+                  </Th>
+                  <Th>Konu</Th>
+                  {stajyerler?.some((s) => s.durum === "Aktif") && (
+                    <Th>Kurum Puanı</Th>
                   )}
+                  <Th>İşlemler</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -314,32 +352,20 @@ function Kurum() {
                     </Td>
                   </Tr>
                 ) : (
-                  stajyerler?.map((stajyer) => (
-                    <Tr key={stajyer.id}>
-                      {stajyer.durum === "Aktif" ? (
-                        <>
-                          <Td>{`${stajyer.ogrenci.isim} ${stajyer.ogrenci.soyisim}`}</Td>
-                          <Td>{stajyer.baslangic_tarihi}</Td>
-                          <Td>{stajyer.bitis_tarihi}</Td>
-                          <Td>{stajyer.konu || "—"}</Td>
-                          <Td>{stajyer.kurum_puani ?? "Henüz verilmedi"}</Td>
-                          <Td>
-                            <Button
-                              colorScheme="teal"
-                              onClick={() => {
-                                setSelectedStaj(stajyer);
-                                onPuanModalOpen();
-                              }}
-                            >
-                              Puanla
-                            </Button>
-                          </Td>
-                        </>
-                      ) : (
-                        <>
-                          <Td>{`${stajyer.ogrenci.isim} ${stajyer.ogrenci.soyisim}`}</Td>
-                          <Td>{getTodayDate()}</Td>
-                          <Td>
+                  stajyerler
+                    ?.filter((s) => !silinenStajyerler.includes(s.id))
+                    .map((stajyer) => (
+                      <Tr key={stajyer.id} bg={getBgColor(stajyer.durum)}>
+                        <Td>{`${stajyer.ogrenci.isim} ${stajyer.ogrenci.soyisim}`}</Td>
+                        <Td>
+                          {stajyer.durum === "Aktif"
+                            ? stajyer.baslangic_tarihi
+                            : getTodayDate()}
+                        </Td>
+                        <Td>
+                          {stajyer.durum === "Aktif" ? (
+                            stajyer.bitis_tarihi
+                          ) : (
                             <Badge
                               colorScheme={
                                 stajyer.durum === "Kurum Onayladı"
@@ -353,124 +379,104 @@ function Kurum() {
                             >
                               {stajyer.durum}
                             </Badge>
-                          </Td>
-
-                          <Td>{stajyer.konu || "—"}</Td>
-                          <Td>
-                            {stajyer.durum === "Reddedildi" ? (
-                              // "Reddedildi" durumunda butonları gösterme
-                              <Text color="gray.500">Başvuru Reddedildi</Text>
-                            ) : (
-                              <>
-                                <Button
-                                  colorScheme="blue"
-                                  onClick={() => handleApproveClick(stajyer)}
-                                  isLoading={isApproving}
-                                  isDisabled={stajyer.kurum_onaylandi}
-                                >
-                                  Onayla
-                                </Button>
-                                <Button
-                                  colorScheme="red"
-                                  onClick={() => handleRejectClick(stajyer)}
-                                  isLoading={isRejecting}
-                                  ml={2}
-                                >
-                                  Reddet
-                                </Button>
-                              </>
-                            )}
-                          </Td>
-                        </>
-                      )}
-                    </Tr>
-                  ))
+                          )}
+                        </Td>
+                        <Td>{stajyer.konu || "—"}</Td>
+                        {stajyer.durum === "Aktif" && (
+                          <Td>{stajyer.kurum_puani ?? "Henüz verilmedi"}</Td>
+                        )}
+                        <Td>
+                          {stajyer.kurum_puani !== null ? (
+                            <Button
+                              width={"100px"}
+                              colorScheme="green"
+                              onClick={() => handleGizle(stajyer.id)}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.textContent = "Gizle";
+                                e.currentTarget.style.backgroundColor = "red";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.textContent = "Tamamlandı";
+                                e.currentTarget.style.backgroundColor = "green";
+                              }}
+                            >
+                              Tamamlandı
+                            </Button>
+                          ) : stajyer.durum === "Aktif" ? (
+                            <Button
+                              onClick={() =>
+                                navigate(`/kurum-staj-detay/${stajyer.id}`)
+                              }
+                            >
+                              Detay
+                            </Button>
+                          ) : stajyer.durum === "Reddedildi" ? (
+                            <Button
+                              bg={"red"}
+                              color={"white"}
+                              width={"100px"}
+                              onClick={() => handleGizle(stajyer.id)}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.textContent = "Gizle";
+                                e.currentTarget.style.backgroundColor = "red";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.textContent = "Reddedildi";
+                                e.currentTarget.style.backgroundColor = "red";
+                              }}
+                            >
+                              Reddedildi
+                            </Button>
+                          ) : (
+                            <>
+                              <Button
+                                colorScheme="blue"
+                                onClick={() => handleApproveClick(stajyer)}
+                                isLoading={isApproving}
+                                isDisabled={stajyer.kurum_onaylandi}
+                              >
+                                Onayla
+                              </Button>
+                              <Button
+                                colorScheme="red"
+                                onClick={() => handleRejectClick(stajyer)}
+                                isLoading={isRejecting}
+                                ml={2}
+                              >
+                                Reddet
+                              </Button>
+                            </>
+                          )}
+                        </Td>
+                      </Tr>
+                    ))
                 )}
               </Tbody>
             </Table>
           </div>
         </div>
       </div>
-
-      {/* Onaylama Modal */}
       <Modal isOpen={isApproveOpen} onClose={onApproveClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Staj Başvurusu Onayı</ModalHeader>
+          <ModalHeader>Staj Başvurusunu Onayla</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {selectedStaj && (
-              <Text>
-                {`${selectedStaj.ogrenci.isim} ${selectedStaj.ogrenci.soyisim}`}{" "}
-                isimli öğrencinin staj başvurusunu onaylamak istediğinize emin
-                misiniz?
-              </Text>
-            )}
+            <Text>
+              {selectedStaj?.ogrenci?.isim} {selectedStaj?.ogrenci?.soyisim}{" "}
+              adlı öğrencinin başvurusunu onaylamak istiyor musunuz?
+            </Text>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={confirmApprove}>
+            <Button variant="ghost" mr={3} onClick={onApproveClose}>
+              İptal
+            </Button>
+            <Button
+              colorScheme="blue"
+              onClick={confirmApprove}
+              isLoading={isApproving}
+            >
               Onayla
-            </Button>
-            <Button variant="ghost" onClick={onApproveClose}>
-              İptal
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <Modal isOpen={isPuanModalOpen} onClose={onPuanModalClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Stajyer Puanla</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={4}>
-            <FormControl mb={4}>
-              <FormLabel>Puan</FormLabel>
-              <Input
-                placeholder="Puan giriniz.."
-                value={puan}
-                onChange={(e) => setPuan(e.target.value)}
-              ></Input>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Açıklama</FormLabel>
-              <Textarea
-                placeholder="Açıklama girin..."
-                rows={5}
-                value={aciklama}
-                onChange={(e) => setAciklama(e.target.value)}
-              />
-            </FormControl>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleSavePuan}>
-              Kaydet
-            </Button>
-            <Button onClick={onPuanModalClose}>İptal</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      {/* Reddetme Modal */}
-      <Modal isOpen={isRejectOpen} onClose={onRejectClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Staj Başvurusu Reddi</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {selectedStaj && (
-              <Text>
-                {selectedStaj.ad} isimli öğrencinin staj başvurusunu reddetmek
-                istediğinize emin misiniz?
-              </Text>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={confirmReject}>
-              Reddet
-            </Button>
-            <Button variant="ghost" onClick={onRejectClose}>
-              İptal
             </Button>
           </ModalFooter>
         </ModalContent>

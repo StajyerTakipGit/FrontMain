@@ -1,5 +1,5 @@
 /* Genel Sayfa Yapısı (app.css'den benzer) */
-.kurum-content {
+.content {
   background: linear-gradient(135deg, #e2e8f0, #f7fafc); /* Daha açık tema */
 
   display: flex;

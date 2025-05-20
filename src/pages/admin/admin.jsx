@@ -125,13 +125,13 @@ const Admin = () => {
   const getFilteredByTab = () => {
     switch (activeTab) {
       case "onayli":
-        return onayliStajlarListesi;
+        return stajyerler.filter((staj) => staj.durum === "Aktif");
       case "bekleyen":
-        return stajyerler.filter((staj) => staj.durum === "Beklemede");
+        return stajyerler.filter((staj) => staj.durum === "Kurum Onayladı");
       case "reddedilen":
         return stajyerler.filter((staj) => staj.durum === "Reddedildi");
-      default:
-        return stajyerler;
+      case "tumu":
+        return stajyerler.filter((staj) => staj.durum !== "Beklemede");
     }
   };
 
@@ -205,14 +205,24 @@ const Admin = () => {
         <header className="dashboard-header">
           <div className="header-content">
             <h2>Staj Başvuru Yönetim Paneli</h2>
-            <p>Toplam {stajyerler.length} başvuru bulunmaktadır</p>
+            <p>
+              Toplam{" "}
+              {stajyerler.filter((staj) => staj.durum !== "Beklemede").length}{" "}
+              başvuru bulunmaktadır
+            </p>
           </div>
 
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-content">
                 <h3>Toplam Başvuru</h3>
-                <p>{stajyerler.length}</p>
+                <p>
+                  {" "}
+                  {
+                    stajyerler.filter((staj) => staj.durum !== "Beklemede")
+                      .length
+                  }
+                </p>
               </div>
               <div className="stat-icon total">
                 <FiCalendar />
@@ -235,7 +245,10 @@ const Admin = () => {
               <div className="stat-content">
                 <h3>Bekleyen</h3>
                 <p>
-                  {stajyerler.filter((s) => s.durum === "Beklemede").length}
+                  {
+                    stajyerler.filter((s) => s.durum === "Kurum onaylandı")
+                      .length
+                  }
                 </p>
               </div>
               <div className="stat-icon pending">
@@ -359,7 +372,6 @@ const Admin = () => {
             <div className="staj-listesi-container">
               {getFilteredByTab().length === 0 ? (
                 <div className="no-results">
-                  <img src="/no-data.svg" alt="Sonuç yok" />
                   <h3>Sonuç bulunamadı</h3>
                   <p>Filtrelerinizi değiştirmeyi deneyin</p>
                 </div>

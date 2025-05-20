@@ -8,6 +8,7 @@ import StajDetay from "./pages/staj_detay/StajDetay";
 import StajDefteri from "./pages/Staj-defteri/Staj-defteri";
 import Kurum from "./pages/Kurum/Kurum";
 import Admin from "./pages/admin/admin";
+import KurumStajDetay from "./pages/KurumStajDetay/KurumStajDetay";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/profil" element={<Profil />} />
         <Route path="/kurum" element={<Kurum />} />
         <Route path="/staj-detay/:id" element={<StajDetay />} />
+        <Route path="/kurum-staj-detay/:id" element={<KurumStajDetay />} />
         {/* Admin Route'ları */}
         <Route path="/admin" element={<Admin />} />
 

@@ -1,15 +1,31 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars } from "@fortawesome/free-solid-svg-icons";
-import { Menu, MenuItem, MenuList, MenuButton } from "@chakra-ui/react";
+import {
+  faBars,
+  faArrowRightFromBracket,
+} from "@fortawesome/free-solid-svg-icons";
+import {
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuButton,
+  Avatar,
+  Box,
+  Flex,
+  Text,
+} from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 
 const Header = ({ toggleSidebar }) => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user")) || {
+    isim: "Admin",
+    soyisim: "Kullanıcı",
+  };
+
   const logOut = () => {
     localStorage.removeItem("token");
-    localStorage.clear("user");
+    localStorage.removeItem("user");
     navigate("/");
   };
 
@@ -21,46 +37,23 @@ const Header = ({ toggleSidebar }) => {
         onClick={toggleSidebar}
       />
       <Menu>
-        <MenuButton>
-          <button className="pp">{`${
-            user?.isim?.charAt(0).toUpperCase() || ""
-          }${user?.soyisim?.charAt(0).toUpperCase() || ""}`}</button>
+        <MenuButton mr={"20px"} mt={"10px"}>
+          <Flex cursor="pointer">
+            <Avatar
+              name={`${user?.isim} ${user?.soyisim}`}
+              bg="blue.600"
+              color="white"
+            />
+          </Flex>
         </MenuButton>
-        <MenuList
-          position="relative"
-          top="-8px"
-          width="80px"
-          transform="translateY(-10px)"
-          transition="opacity 0.3s ease, transform 0.3s ease"
-          minW="unset"
-          paddingY="0"
-          zIndex="3"
-          margin="0px"
-          padding="0px"
-        >
+        <MenuList minW="150px" bg="white" shadow="md">
           <MenuItem
-            height="36px"
-            backgroundColor="gray.700"
+            onClick={logOut}
+            icon={<FontAwesomeIcon icon={faArrowRightFromBracket} />}
             fontSize="sm"
-            _hover={{ bg: "gray.800" }}
+            color={"black"}
           >
-            <a href="/profil">Profil</a>
-          </MenuItem>
-          <MenuItem
-            height="36px"
-            backgroundColor="gray.700"
-            fontSize="sm"
-            _hover={{ bg: "gray.800" }}
-          >
-            <a href="/ayarlar">Ayarlar</a>
-          </MenuItem>
-          <MenuItem
-            height="36px"
-            backgroundColor="gray.700"
-            fontSize="sm"
-            _hover={{ bg: "gray.800" }}
-          >
-            <button onClick={logOut}>Çıkış Yap</button>
+            Çıkış Yap
           </MenuItem>
         </MenuList>
       </Menu>

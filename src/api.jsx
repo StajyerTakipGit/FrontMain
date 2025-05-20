@@ -196,6 +196,7 @@ export const patchDefter = async ({ staj, gun_no, content, toast }) => {
       console.error("Error:", error.message); // Log error details
     });
 };
+
 //////// KURUM APİLERİ ////////
 export const getStajyerler = async () => {
   try {
@@ -205,14 +206,11 @@ export const getStajyerler = async () => {
       throw new Error("Token bulunamadı. Lütfen giriş yapınız.");
     }
 
-    const response = await axios.get(
-      `http://192.168.128.74:8000/api/kurum/stajyerler/`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await axios.get(`${apiUrl}/api/kurum/stajyerler/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return response.data;
   } catch (error) {
@@ -261,8 +259,11 @@ export const StajPuanla = async (id, puan, aciklama) => {
     const response = await axios.patch(
       `${apiUrl}/api/kurum/stajlar/${id}/`,
       {
+        kurum_onaylandi: true,
+        admin_onaylandi: true,
+        durum: "Aktif",
         kurum_puani: puan,
-        kurum_aciklama: aciklama, // true veya false
+        kurum_aciklama: aciklama,
       },
       {
         headers: {

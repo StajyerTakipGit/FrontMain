@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import {
   Box,
@@ -14,6 +14,7 @@ import "react-calendar/dist/Calendar.css";
 import styles from "./styles.module.css";
 import { useLocation } from "react-router-dom";
 import { getDefter, DefteriYukle, patchDefter } from "../api";
+import Ogrenci from "../pages/Ogrenci/Ogrenci";
 
 const statusOptions = ["İzinli", "Raporlu", "Geldi"];
 
@@ -63,6 +64,19 @@ export const StajGunuEditor = () => {
       setDiaryContent("");
     }
   }, [formattedDate, backendEntries]);
+
+  // Bu ay yapılan giriş sayısını hesapla
+  const buAyGirisSayisi = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear(); // Örn: 2025
+    const month = String(now.getMonth() + 1).padStart(2, "0"); // Örn: "05"
+
+    const currentMonthPrefix = `${year}-${month}`; // "2025-05"
+
+    return backendEntries.filter((entry) =>
+      entry.gun_no.startsWith(currentMonthPrefix)
+    ).length;
+  }, [backendEntries]);
 
   const handleStatusClick = (status) => {
     if (selectedStatus === status) {
